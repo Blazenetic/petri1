@@ -7,6 +7,7 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 @export var consume_tween_time: float = 0.2
 @export var consume_tween_trans: int = Tween.TRANS_QUAD
 @export var consume_tween_ease: int = Tween.EASE_OUT
+@export var debug_logging: bool = false
 
 var _entity: BaseEntity
 var _identity: IdentityComponent
@@ -63,6 +64,10 @@ func _consume(consumer: BaseEntity) -> void:
 	_consumed = true
 	var self_id: StringName = _identity.uuid if _identity else StringName()
 	var consumer_id: StringName = consumer.identity.uuid if (consumer and consumer.identity) else StringName()
+	if debug_logging:
+		var start_sz: float = _physical.size if _physical else -1.0
+		var smod: Color = (_entity.self_modulate if (_entity and _entity is CanvasItem) else Color(1,1,1,1))
+		print("[NutrientComponent] consume start id=", self_id, " by=", consumer_id, " size=", start_sz, " self_modulate=", smod)
 	GlobalEvents.emit_signal("nutrient_consumed", self_id, consumer_id)
 	if _entity:
 		var t := _entity.create_tween()
@@ -74,5 +79,10 @@ func _consume(consumer: BaseEntity) -> void:
 		_on_consume_tween_finished()
 
 func _on_consume_tween_finished() -> void:
+	if debug_logging:
+		var end_sz: float = _physical.size if _physical else -1.0
+		var smod: Color = (_entity.self_modulate if (_entity and _entity is CanvasItem) else Color(1,1,1,1))
+		var self_id: StringName = _identity.uuid if _identity else StringName()
+		print("[NutrientComponent] consume finished id=", self_id, " size=", end_sz, " self_modulate=", smod)
 	if _identity and not _identity.uuid.is_empty():
 		EntityFactory.destroy_entity(_identity.uuid, &"consumed")

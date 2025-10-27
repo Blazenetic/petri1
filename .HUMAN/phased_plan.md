@@ -59,13 +59,13 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 ## PHASE 2: Organisms and Basic Behaviors
 
 ### 2.1 Nutrient System
-- [ ] Create Nutrient scene inheriting from BaseEntity
-- [ ] Implement NutrientManager with spawn patterns and density control
-- [ ] Add nutrient energy value and size variations
-- [ ] Create nutrient consumption detection via Area2D overlap
-- [ ] Implement nutrient respawn system with configurable timer
-- [ ] Add visual feedback for nutrient consumption (shrink/fade)
-- [ ] Create nutrient distribution patterns (random, clustered, uniform)
+- [x] Create Nutrient scene inheriting from BaseEntity
+- [x] Implement NutrientManager with spawn patterns and density control
+- [x] Add nutrient energy value and size variations
+- [x] Create nutrient consumption detection via Area2D overlap
+- [x] Implement nutrient respawn system with configurable timer
+- [x] Add visual feedback for nutrient consumption (shrink/fade)
+- [x] Create nutrient distribution patterns (random, clustered, uniform)
 
 ### 2.2 Bacteria Implementation
 - [ ] Create Bacteria scene with appropriate sprites/shapes
