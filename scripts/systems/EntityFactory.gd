@@ -49,13 +49,14 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	var merged: Dictionary = {"position": position}
 	for k in params.keys():
 		merged[k] = params[k]
-	node.init(merged)
+	# Move into live scene tree first so _ready runs and components are attached
+	_root_parent.add_child(node)
 	# Ensure identity exists even if this is a freshly instantiated (non-prewarmed) node
 	if node.identity == null:
 		var ident := IdentityComponent.new()
 		node.add_component(ident)
-	# Move into live scene tree (now safe; node was detached from pool container on acquire)
-	_root_parent.add_child(node)
+	# Now safe to initialize with params (PhysicalComponent present)
+	node.init(merged)
 	# Ensure transform is applied after entering the tree
 	if node.physical != null:
 		node.physical.update(0.0)

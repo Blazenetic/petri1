@@ -5,7 +5,7 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 @export var grid_cell_size: float = 64.0
 
 var entity_pool_sizes: Dictionary = {
-	EntityTypes.EntityType.BACTERIA: 50,
+	EntityTypes.EntityType.BACTERIA: 300,
 	EntityTypes.EntityType.NUTRIENT: 200
 }
 

@@ -1,17 +1,17 @@
 [gd_scene load_steps=3 format=3 uid="uid://mj47o2nb35u1"]
 
 [ext_resource type="PackedScene" path="res://scenes/environments/PetriDish.tscn" id="1"]
-[ext_resource type="Script" path="res://scripts/utils/TestSpawner.gd" id="2"]
+[ext_resource type="Script" uid="uid://cmidd4cldkqnk" path="res://scripts/utils/TestSpawner.gd" id="2"]
 
 [node name="Game" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
-current = true
 
 [node name="DishContainer" type="Node2D" parent="."]
 
 [node name="PetriDish" parent="DishContainer" instance=ExtResource("1")]
 
 [node name="SystemsContainer" type="Node2D" parent="."]
+
 [node name="TestSpawner" type="Node" parent="SystemsContainer"]
 script = ExtResource("2")

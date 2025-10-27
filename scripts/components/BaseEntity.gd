@@ -42,13 +42,32 @@ func add_component(comp: EntityComponent) -> void:
 	comp.init(self)
 
 func init(params := {}) -> void:
+	# Position
 	if params.has("position"):
-		physical.position = params["position"]
+		var pos: Vector2 = params["position"]
+		if physical != null:
+			physical.position = pos
+		else:
+			global_position = pos
+	# Rotation
 	if params.has("rotation"):
-		physical.rotation = float(params["rotation"])
+		var rot: float = float(params["rotation"])
+		if physical != null:
+			physical.rotation = rot
+		else:
+			rotation = rot
+	# Size
 	if params.has("size"):
 		size = float(params["size"])
-		physical.size = size
+		if physical != null:
+			physical.size = size
+		else:
+			# Update collider radius so collisions roughly match until PhysicalComponent syncs
+			var collider := get_node_or_null("Collider") as CollisionShape2D
+			if collider and collider.shape is CircleShape2D:
+				var circle := collider.shape as CircleShape2D
+				if circle:
+					circle.radius = size
 	# keep identity in sync with entity_type on every init (important for pooled instances)
 	if identity:
 		identity.entity_type = entity_type
