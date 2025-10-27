@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://d23tt73ww2mm8"]
+
+[ext_resource type="PackedScene" path="res://scenes/Game.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="2"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Game" parent="." instance=ExtResource("1")]
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="UILayer" instance=ExtResource("2")]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="SystemsContainer" type="Node" parent="."]
