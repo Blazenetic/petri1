@@ -78,3 +78,30 @@ func destroy_entity(entity_id: StringName, reason: StringName = &"despawn") -> v
 		node.get_parent().remove_child(node)
 	pool.release(node)
 	print("[EntityFactory] destroyed id=", entity_id, " type=", node.entity_type, " reason=", reason)
+
+# Convenience spawn helpers using PetriDish boundary and coordinate utilities
+
+func _get_dish() -> PetriDish:
+	var nodes := get_tree().get_nodes_in_group("Dish")
+	if nodes.size() > 0:
+		return nodes[0] as PetriDish
+	return null
+
+# Spawns an entity at a random point inside the dish, respecting a margin from the boundary
+func create_entity_random(entity_type: int, margin: float = 0.0, params := {}) -> StringName:
+	var dish := _get_dish()
+	var pos_world := Vector2.ZERO
+	if dish:
+		var local := dish.get_random_point(margin)
+		pos_world = dish.dish_to_world(local)
+	return create_entity(entity_type, pos_world, params)
+
+# Spawns an entity at the requested position but clamped to be inside the dish by entity_radius
+func create_entity_clamped(entity_type: int, position: Vector2, entity_radius: float, params := {}) -> StringName:
+	var pos_world := position
+	var dish := _get_dish()
+	if dish:
+		var local := dish.world_to_dish(position)
+		var clamped_local := dish.clamp_to_dish(local, entity_radius)
+		pos_world = dish.dish_to_world(clamped_local)
+	return create_entity(entity_type, pos_world, params)

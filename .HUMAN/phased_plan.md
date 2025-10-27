@@ -28,13 +28,13 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 - [x] Add entity lifecycle signals: entity_spawned, entity_destroyed
 
 ### 1.3 Petri Dish Environment
-- [ ] Create PetriDish scene with circular boundary using StaticBody2D
-- [ ] Implement dish boundary collision detection and response
-- [ ] Create visual representation: circular background with agar texture
-- [ ] Add dish radius configuration and scaling system
-- [ ] Implement coordinate system with dish center as origin
-- [ ] Create boundary margin system to prevent entity spawn at edges
-- [ ] Add debug visualization for dish quadrants and grid cells
+- [x] Create PetriDish scene with circular boundary using StaticBody2D
+- [x] Implement dish boundary collision detection and response
+- [x] Create visual representation: circular background with agar texture
+- [x] Add dish radius configuration and scaling system
+- [x] Implement coordinate system with dish center as origin
+- [x] Create boundary margin system to prevent entity spawn at edges
+- [x] Add debug visualization for dish quadrants and grid cells
 
 ### 1.4 Basic Movement System
 - [ ] Create MovementComponent with velocity, acceleration, and max_speed
