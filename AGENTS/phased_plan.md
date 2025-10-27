@@ -6,26 +6,26 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 
 ---
 
-## PHASE 1: Foundation and Core Systems
+## PHASE 1: Foundation and Core Systems.
 
 ### 1.1 Project Setup and Configuration
-- [ ] Initialize Godot 4.5 project with folder structure as specified in architecture document
-- [ ] Create project settings configuration (physics tick rate: 60fps, viewport settings, rendering parameters)
-- [ ] Set up .gitignore for Godot projects including .import/ and export templates
-- [ ] Create base scene hierarchy: Main → Game → [DishContainer, UILayer, SystemsContainer]
-- [ ] Configure project input map for mouse controls (pan, zoom, click, drag)
-- [ ] Set up autoload singletons for: GlobalEvents, WorldState, ConfigurationManager
+- [x] Initialize Godot 4.5 project with folder structure as specified in architecture document
+- [x] Create project settings configuration (physics tick rate: 60fps, viewport settings, rendering parameters)
+- [x] Set up .gitignore for Godot projects including .import/ and export templates
+- [x] Create base scene hierarchy: Main → Game → [DishContainer, UILayer, SystemsContainer]
+- [x] Configure project input map for mouse controls (pan, zoom, click, drag)
+- [x] Set up autoload singletons for: GlobalEvents, WorldState, ConfigurationManager
 - [ ] Create Resources folder structure with subfolders for each resource type
 
 ### 1.2 Base Entity System
-- [ ] Create BaseEntity scene with Area2D root and CollisionShape2D child
-- [ ] Implement EntityComponent base class with init(), update(), and cleanup() methods
-- [ ] Create IdentityComponent with UUID generation and entity type enumeration
-- [ ] Implement PhysicalComponent with position, rotation, size, and mass properties
-- [ ] Create EntityFactory singleton with create_entity() method
-- [ ] Implement EntityRegistry with add(), remove(), and get_by_id() methods
-- [ ] Create entity pooling system with configurable pool sizes per entity type
-- [ ] Add entity lifecycle signals: entity_spawned, entity_destroyed
+- [x] Create BaseEntity scene with Area2D root and CollisionShape2D child
+- [x] Implement EntityComponent base class with init(), update(), and cleanup() methods
+- [x] Create IdentityComponent with UUID generation and entity type enumeration
+- [x] Implement PhysicalComponent with position, rotation, size, and mass properties
+- [x] Create EntityFactory singleton with create_entity() method
+- [x] Implement EntityRegistry with add(), remove(), and get_by_id() methods
+- [x] Create entity pooling system with configurable pool sizes per entity type
+- [x] Add entity lifecycle signals: entity_spawned, entity_destroyed
 
 ### 1.3 Petri Dish Environment
 - [ ] Create PetriDish scene with circular boundary using StaticBody2D

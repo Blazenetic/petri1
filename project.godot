@@ -20,6 +20,8 @@ config/icon="res://icon.svg"
 GlobalEvents="*res://scripts/systems/GlobalEvents.gd"
 WorldState="*res://scripts/systems/WorldState.gd"
 ConfigurationManager="*res://scripts/systems/ConfigurationManager.gd"
+EntityRegistry="*res://scripts/systems/EntityRegistry.gd"
+EntityFactory="*res://scripts/systems/EntityFactory.gd"
 
 [display]
 
