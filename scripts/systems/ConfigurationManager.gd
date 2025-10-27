@@ -3,6 +3,8 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
 @export var dish_radius: float = 480.0
 @export var grid_cell_size: float = 64.0
+@export var grid_debug_heatmap_default: bool = false
+@export var grid_debug_counts_default: bool = false
 
 var entity_pool_sizes: Dictionary = {
 	EntityTypes.EntityType.BACTERIA: 300,
@@ -15,3 +17,4 @@ func get_entity_pool_size(entity_type: int) -> int:
 func _ready() -> void:
 	print("[ConfigurationManager] ready")
 	print("[ConfigurationManager] entity_pool_sizes =", entity_pool_sizes)
+	print("[ConfigurationManager] grid_cell_size =", grid_cell_size, " heatmap_default=", grid_debug_heatmap_default, " counts_default=", grid_debug_counts_default)

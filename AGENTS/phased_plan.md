@@ -37,13 +37,13 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 - [x] Add debug visualization for dish quadrants and grid cells
 
 ### 1.4 Basic Movement System
-- [ ] Create MovementComponent with velocity, acceleration, and max_speed
-- [ ] Implement RandomWander behavior with direction change timer
-- [ ] Add Brownian motion jitter for realistic microorganism movement
-- [ ] Create movement dampening system for gradual speed changes
-- [ ] Implement rotation alignment with movement direction
-- [ ] Add collision response for entity-to-entity bumping
-- [ ] Create movement validation to keep entities within dish bounds
+- [x] Create MovementComponent with velocity, acceleration, and max_speed
+- [x] Implement RandomWander behavior with direction change timer
+- [x] Add Brownian motion jitter for realistic microorganism movement
+- [x] Create movement dampening system for gradual speed changes
+- [x] Implement rotation alignment with movement direction
+- [x] Add collision response for entity-to-entity bumping
+- [x] Create movement validation to keep entities within dish bounds
 
 ### 1.5 Spatial Partitioning System
 - [ ] Implement SpatialGrid class with configurable cell size

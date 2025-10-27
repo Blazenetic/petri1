@@ -60,6 +60,9 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	# Ensure transform is applied after entering the tree
 	if node.physical != null:
 		node.physical.update(0.0)
+	# Attach spatial tracker so entities register with SpatialGrid
+	var tracker := SpatialTrackerComponent.new()
+	node.add_component(tracker)
 	var id: StringName = node.identity.uuid
 	print("[EntityFactory] spawned ", id, " type=", entity_type, " pos=", position)
 	EntityRegistry.add(id, node, entity_type)
