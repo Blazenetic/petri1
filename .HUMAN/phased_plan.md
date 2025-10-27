@@ -46,13 +46,13 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 - [x] Create movement validation to keep entities within dish bounds
 
 ### 1.5 Spatial Partitioning System
-- [ ] Implement SpatialGrid class with configurable cell size
-- [ ] Create methods: add_entity(), remove_entity(), update_entity_position()
-- [ ] Implement get_entities_in_cell() and get_entities_in_radius()
-- [ ] Add entity position tracking with automatic cell updates
-- [ ] Create neighbor query optimization using adjacent cells only
-- [ ] Implement debug visualization for grid cells and entity distribution
-- [ ] Add performance metrics for spatial query times
+- [x] Implement SpatialGrid class with configurable cell size
+- [x] Create methods: add_entity(), remove_entity(), update_entity_position()
+- [x] Implement get_entities_in_cell() and get_entities_in_radius()
+- [x] Add entity position tracking with automatic cell updates
+- [x] Create neighbor query optimization using adjacent cells only
+- [x] Implement debug visualization for grid cells and entity distribution
+- [x] Add performance metrics for spatial query times
 
 ---
 

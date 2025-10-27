@@ -3,6 +3,9 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
 const BASE_ENTITY_SCENE := "res://scenes/entities/BaseEntity.tscn"
 
+# Per-type scene mapping (PHASE 2.1)
+var _scene_map: Dictionary = {}
+ 
 var _pools: Dictionary = {}
 var _root_parent: Node
 var _pool_container: Node
@@ -32,11 +35,18 @@ func _ready() -> void:
 	
 	# Configure per-type pools (fallback safe if not defined yet)
 	var sizes_dict: Dictionary = ConfigurationManager.entity_pool_sizes
+	# Seed internal scene map from configuration if present
+	if "entity_scene_paths" in ConfigurationManager:
+		for k in ConfigurationManager.entity_scene_paths.keys():
+			_scene_map[int(k)] = String(ConfigurationManager.entity_scene_paths[k])
 	for t in sizes_dict.keys():
 		var prewarm: int = int(sizes_dict[t])
-		var pool := ObjectPool.new()
+		var pool: ObjectPool = ObjectPool.new()
 		add_child(pool)
-		pool.configure(BASE_ENTITY_SCENE, prewarm, _pool_container)
+		var scene_path: String = String(_scene_map.get(int(t), BASE_ENTITY_SCENE))
+		if scene_path == "":
+			scene_path = BASE_ENTITY_SCENE
+		pool.configure(scene_path, prewarm, _pool_container)
 		_pools[int(t)] = pool
 
 func create_entity(entity_type: int, position: Vector2, params := {}) -> StringName:
@@ -53,7 +63,7 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	_root_parent.add_child(node)
 	# Ensure identity exists even if this is a freshly instantiated (non-prewarmed) node
 	if node.identity == null:
-		var ident := IdentityComponent.new()
+		var ident: IdentityComponent = IdentityComponent.new()
 		node.add_component(ident)
 	# Now safe to initialize with params (PhysicalComponent present)
 	node.init(merged)
@@ -61,7 +71,7 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	if node.physical != null:
 		node.physical.update(0.0)
 	# Attach spatial tracker so entities register with SpatialGrid
-	var tracker := SpatialTrackerComponent.new()
+	var tracker: SpatialTrackerComponent = SpatialTrackerComponent.new()
 	node.add_component(tracker)
 	var id: StringName = node.identity.uuid
 	print("[EntityFactory] spawned ", id, " type=", entity_type, " pos=", position)
@@ -86,26 +96,38 @@ func destroy_entity(entity_id: StringName, reason: StringName = &"despawn") -> v
 # Convenience spawn helpers using PetriDish boundary and coordinate utilities
 
 func _get_dish() -> PetriDish:
-	var nodes := get_tree().get_nodes_in_group("Dish")
+	var nodes: Array = get_tree().get_nodes_in_group("Dish")
 	if nodes.size() > 0:
 		return nodes[0] as PetriDish
 	return null
 
 # Spawns an entity at a random point inside the dish, respecting a margin from the boundary
 func create_entity_random(entity_type: int, margin: float = 0.0, params := {}) -> StringName:
-	var dish := _get_dish()
-	var pos_world := Vector2.ZERO
+	var dish: PetriDish = _get_dish()
+	var pos_world: Vector2 = Vector2.ZERO
 	if dish:
-		var local := dish.get_random_point(margin)
+		var local: Vector2 = dish.get_random_point(margin)
 		pos_world = dish.dish_to_world(local)
 	return create_entity(entity_type, pos_world, params)
 
 # Spawns an entity at the requested position but clamped to be inside the dish by entity_radius
 func create_entity_clamped(entity_type: int, position: Vector2, entity_radius: float, params := {}) -> StringName:
-	var pos_world := position
-	var dish := _get_dish()
+	var pos_world: Vector2 = position
+	var dish: PetriDish = _get_dish()
 	if dish:
-		var local := dish.world_to_dish(position)
-		var clamped_local := dish.clamp_to_dish(local, entity_radius)
+		var local: Vector2 = dish.world_to_dish(position)
+		var clamped_local: Vector2 = dish.clamp_to_dish(local, entity_radius)
 		pos_world = dish.dish_to_world(clamped_local)
 	return create_entity(entity_type, pos_world, params)
+
+# Register/override a scene path for a specific entity type (PHASE 2.1)
+func register_entity_scene(entity_type: int, scene_path: String) -> void:
+	_scene_map[int(entity_type)] = scene_path
+	# Reconfigure pool if it already exists to use the new scene mapping
+	var pool: ObjectPool = _pools.get(int(entity_type), null)
+	if pool != null:
+		var prewarm: int = int(ConfigurationManager.get_entity_pool_size(int(entity_type)))
+		pool.configure(scene_path, prewarm, _pool_container)
+
+func get_scene_path_for_type(entity_type: int) -> String:
+	return String(_scene_map.get(int(entity_type), BASE_ENTITY_SCENE))

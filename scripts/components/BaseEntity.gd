@@ -29,6 +29,13 @@ func _ready() -> void:
 		physical = PhysicalComponent.new()
 		add_component(physical)
 	physical.size = size
+	# Initialize any pre-attached EntityComponent nodes under Components (editor-added)
+	if _components_container:
+		for child in _components_container.get_children():
+			var comp := child as EntityComponent
+			if comp and not _components.has(comp) and comp != identity and comp != physical:
+				_components.append(comp)
+				comp.init(self)
 	# Ensure processing and initial draw
 	set_process(true)
 	queue_redraw()

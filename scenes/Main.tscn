@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://d23tt73ww2mm8"]
+[gd_scene load_steps=5 format=3 uid="uid://d23tt73ww2mm8"]
 
 [ext_resource type="PackedScene" path="res://scenes/Game.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="2"]
 [ext_resource type="Script" path="res://scripts/systems/SpatialGrid.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/systems/NutrientManager.gd" id="4"]
 
 [node name="Main" type="Node2D"]
 
@@ -18,3 +19,6 @@ anchors_preset = 0
 
 [node name="SpatialGrid" type="Node" parent="SystemsContainer"]
 script = ExtResource("3")
+
+[node name="NutrientManager" type="Node" parent="SystemsContainer"]
+script = ExtResource("4")

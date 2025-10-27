@@ -3,7 +3,7 @@ class_name TestSpawner
 
 const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
-@export var spawn_count: int = 200
+@export var spawn_count: int = 80
 @export var spawn_margin: float = 24.0
 @export var initial_speed_variation: float = 0.4
 @export var align_rotation: bool = true

@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/components/BaseEntity.gd" id=1]
+[ext_resource type="Script" path="res://scripts/components/NutrientComponent.gd" id=2]
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 6.0
+
+[node name="Nutrient" type="Area2D"]
+script = ExtResource(1)
+collision_layer = 1
+collision_mask = 1
+entity_type = 2
+size = 6.0
+base_color = Color(0.6, 0.9, 1, 1)
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+shape = SubResource(1)
+
+[node name="Components" type="Node" parent="."]
+
+[node name="NutrientComponent" type="Node" parent="Components"]
+script = ExtResource(2)
