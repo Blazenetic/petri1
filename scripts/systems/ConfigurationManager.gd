@@ -8,7 +8,7 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 @export var grid_debug_counts_default: bool = false
 
 # Nutrient system configuration (PHASE 2.1)
-@export var nutrient_target_count: int = 150
+@export var nutrient_target_count: int = 20
 @export var nutrient_spawn_margin: float = 16.0
 @export var nutrient_size_min: float = 3.0
 @export var nutrient_size_max: float = 8.0
@@ -31,6 +31,7 @@ var entity_pool_sizes: Dictionary = {
 # Optional per-type scene mapping (PHASE 2.1)
 # Allows EntityFactory to instance specific scenes for each entity type.
 var entity_scene_paths: Dictionary = {
+	EntityTypes.EntityType.BACTERIA: "res://scenes/entities/Bacteria.tscn",
 	EntityTypes.EntityType.NUTRIENT: "res://scenes/entities/Nutrient.tscn"
 }
 

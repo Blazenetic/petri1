@@ -1,0 +1,51 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/components/BaseEntity.gd" id=1]
+[ext_resource type="Script" path="res://scripts/components/MovementComponent.gd" id=2]
+[ext_resource type="Script" path="res://scripts/behaviors/SeekNutrient.gd" id=3]
+[ext_resource type="Script" path="res://scripts/components/BiologicalComponent.gd" id=4]
+[ext_resource type="Script" path="res://scripts/behaviors/RandomWander.gd" id=5]
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 8.0
+
+[node name="Bacteria" type="Area2D"]
+script = ExtResource(1)
+collision_layer = 1
+collision_mask = 1
+entity_type = 1
+size = 8.0
+base_color = Color(0.3, 0.8, 0.3, 1)
+
+[node name="Collider" type="CollisionShape2D" parent="."]
+shape = SubResource(1)
+
+[node name="Components" type="Node" parent="."]
+
+; Core movement
+[node name="MovementComponent" type="Node" parent="Components"]
+script = ExtResource(2)
+align_rotation = true
+max_speed = 140.0
+damping = 0.1
+jitter_strength = 30.0
+
+; Biology (energy/age/health)
+[node name="BiologicalComponent" type="Node" parent="Components"]
+script = ExtResource(4)
+debug_logging = false
+
+; Gentle fallback wander if no target
+[node name="RandomWander" type="Node" parent="Components"]
+script = ExtResource(5)
+; magnitude can remain default; SeekNutrient below will override when it has a target
+
+; Seek nearest nutrient (placed last so it runs after RandomWander and overrides acceleration)
+[node name="SeekNutrient" type="Node" parent="Components"]
+script = ExtResource(3)
+; sense_radius = 160.0
+; target_refresh_interval = 0.25
+; acceleration_magnitude = 220.0
+; slow_radius = 24.0
+; use_spatial_grid = true
+; debug_draw_target = false

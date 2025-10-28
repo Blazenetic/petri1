@@ -13,6 +13,5 @@
 
 [node name="SystemsContainer" type="Node2D" parent="."]
 
-
 [node name="TestSpawner" type="Node" parent="SystemsContainer"]
 script = ExtResource("2")
