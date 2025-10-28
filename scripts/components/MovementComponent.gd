@@ -3,7 +3,6 @@ class_name MovementComponent
 
 # MovementComponent
 # Integrates acceleration-based motion, damping, jitter, soft separation, and dish boundary handling.
-# Follows Phase 1.4 spec. Exposes tuning parameters for designers.
 
 @export var max_speed: float = 120.0
 @export_range(0.0, 1.0, 0.01) var damping: float = 0.15

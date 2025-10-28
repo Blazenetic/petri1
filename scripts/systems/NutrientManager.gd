@@ -5,7 +5,7 @@ const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
 enum DistributionMode { RANDOM = 0, CLUSTERED = 1, UNIFORM = 2 }
 
-@export var target_count: int = 1
+@export var target_count: int = 150
 @export var spawn_margin: float = 16.0
 @export var size_min: float = 3.0
 @export var size_max: float = 8.0
@@ -18,7 +18,7 @@ enum DistributionMode { RANDOM = 0, CLUSTERED = 1, UNIFORM = 2 }
 @export var clustered_spread: float = 48.0
 @export var uniform_cell_size: float = 48.0
 @export var reconcile_interval_sec: float = 2.0
-@export var debug_logging: bool = false
+@export var debug_logging: bool = true
 
 var _dish: PetriDish
 var _reconcile_timer: Timer

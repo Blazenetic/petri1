@@ -3,7 +3,7 @@ class_name TestSpawner
 
 const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
-@export var spawn_count: int = 80
+@export var spawn_count: int = 20
 @export var spawn_margin: float = 24.0
 @export var initial_speed_variation: float = 0.4
 @export var align_rotation: bool = true
@@ -31,14 +31,32 @@ func _spawn_entities() -> void:
 		var node := EntityRegistry.get_by_id(id) as BaseEntity
 		if node == null:
 			continue
-		# Attach movement and wander behavior
-		var move := MovementComponent.new()
+		# Ensure MovementComponent exists (avoid duplicates if scene already provides it)
+		var move: MovementComponent = null
+		var comps := node.get_node_or_null("Components")
+		if comps:
+			for c in comps.get_children():
+				if c is MovementComponent:
+					move = c
+					break
+		if move == null:
+			move = MovementComponent.new()
+			node.add_component(move)
 		move.align_rotation = align_rotation
-		node.add_component(move)
-		var wander := RandomWander.new()
+
+		# Ensure RandomWander exists or update its params (avoid duplicates)
+		var wander: RandomWander = null
+		if comps:
+			for c2 in comps.get_children():
+				if c2 is RandomWander:
+					wander = c2
+					break
+		if wander == null:
+			wander = RandomWander.new()
+			node.add_component(wander)
 		wander.change_interval = change_interval
 		wander.magnitude = accel_magnitude
-		node.add_component(wander)
+
 		# Give a small initial nudge so entities start moving immediately
 		move.velocity = _rand_unit() * move.max_speed * initial_speed_variation
 
