@@ -2,6 +2,8 @@ extends Node
 class_name SpatialGrid
 
 const PRINT_INTERVAL_SEC := 5.0
+const LogDefs = preload("res://scripts/systems/Log.gd")
+var _log
 
 var _cell_size: float = 64.0
 var _dish: PetriDish
@@ -25,6 +27,7 @@ var _since_print: float = 0.0
 func _ready() -> void:
 	add_to_group("Spatial")
 	set_process(true)
+	_log = get_node_or_null("/root/Log")
 	# Auto-configure if possible
 	var dish: PetriDish = _find_dish()
 	if dish != null:
@@ -32,20 +35,28 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_since_print += delta
-	if _since_print >= PRINT_INTERVAL_SEC:
+	if _log != null:
 		var avg_upd: float = float(_total_update_time_us) / float(max(_updates, 1))
 		var avg_q: float = float(_total_query_time_us) / float(max(_queries, 1))
-		print("[SpatialGrid] upd/s=", _updates / _since_print, " q/s=", _queries / _since_print,
-			" avg_upd_us=", avg_upd, " avg_q_us=", avg_q,
-			" max_upd_us=", _max_update_time_us, " max_q_us=", _max_query_time_us,
-			" cells=", _cells.size(), " entities=", _backrefs.size())
-		_since_print = 0.0
-		_updates = 0
-		_queries = 0
-		_total_update_time_us = 0
-		_total_query_time_us = 0
-		_max_update_time_us = 0
-		_max_query_time_us = 0
+		var emitted: bool = _log.every(&"SpatialGridPerf", 1.0, LogDefs.CAT_PERF, LogDefs.LEVEL_DEBUG, [
+			"[SpatialGrid]",
+			"upd/s=", _updates / max(_since_print, 0.000001),
+			"q/s=", _queries / max(_since_print, 0.000001),
+			"avg_upd_us=", avg_upd,
+			"avg_q_us=", avg_q,
+			"max_upd_us=", _max_update_time_us,
+			"max_q_us=", _max_query_time_us,
+			"cells=", _cells.size(),
+			"entities=", _backrefs.size()
+		])
+		if emitted:
+			_since_print = 0.0
+			_updates = 0
+			_queries = 0
+			_total_update_time_us = 0
+			_total_query_time_us = 0
+			_max_update_time_us = 0
+			_max_query_time_us = 0
 
 # Public API
 

@@ -4,6 +4,8 @@ class_name NutrientManager
 const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
 enum DistributionMode { RANDOM = 0, CLUSTERED = 1, UNIFORM = 2 }
+const LogDefs = preload("res://scripts/systems/Log.gd")
+var _log
 
 @export var target_count: int = 150
 @export var spawn_margin: float = 16.0
@@ -18,13 +20,13 @@ enum DistributionMode { RANDOM = 0, CLUSTERED = 1, UNIFORM = 2 }
 @export var clustered_spread: float = 48.0
 @export var uniform_cell_size: float = 48.0
 @export var reconcile_interval_sec: float = 2.0
-@export var debug_logging: bool = true
 
 var _dish: PetriDish
 var _reconcile_timer: Timer
 var _cluster_centers_local: Array[Vector2] = []
 
 func _ready() -> void:
+	_log = get_node_or_null("/root/Log")
 	# Load defaults from configuration (PHASE 2.1)
 	_load_defaults_from_config()
 	_dish = _get_dish()
@@ -88,11 +90,20 @@ func _on_reconcile_timeout() -> void:
 	var current: int = EntityRegistry.count_by_type(EntityTypes.EntityType.NUTRIENT)
 	if current < target_count:
 		var need: int = target_count - current
-		if debug_logging:
-			print("[NutrientManager] reconcile: current=", current, " target=", target_count, " spawning +", need)
+		if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_DEBUG):
+			_log.debug(LogDefs.CAT_SYSTEMS, [
+				"[NutrientManager] reconcile:",
+				"current=", current,
+				"target=", target_count,
+				"spawning=+", need
+			])
 		_spawn_now(need, distribution_mode)
-	elif debug_logging:
-		print("[NutrientManager] reconcile: current=", current, " ok")
+	elif _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_DEBUG):
+		_log.debug(LogDefs.CAT_SYSTEMS, [
+			"[NutrientManager] reconcile:",
+			"current=", current,
+			"ok"
+		])
 
 func _on_entity_destroyed(entity_id: StringName, entity_type: int, reason: StringName) -> void:
 	if entity_type != EntityTypes.EntityType.NUTRIENT:
@@ -100,8 +111,11 @@ func _on_entity_destroyed(entity_id: StringName, entity_type: int, reason: Strin
 	if reason != &"consumed":
 		return
 	var delay: float = randf_range(respawn_delay_min, respawn_delay_max)
-	if debug_logging:
-		print("[NutrientManager] schedule respawn in ", delay, "s for consumed nutrient")
+	if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_DEBUG):
+		_log.debug(LogDefs.CAT_SYSTEMS, [
+			"[NutrientManager] schedule respawn",
+			"delay_s=", delay
+		])
 	var timer: SceneTreeTimer = get_tree().create_timer(max(0.01, delay))
 	timer.timeout.connect(Callable(self, "_on_respawn_timeout"))
 
@@ -189,11 +203,17 @@ func _spawn_nutrient_instance(pos_world: Vector2, size_value: float, energy_valu
 					break
 		if comp:
 			comp.set_energy_value(energy_value)
-			comp.debug_logging = true
 	GlobalEvents.emit_signal("nutrient_spawned", id, pos_world, energy_value)
-	if debug_logging:
+	if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_INFO):
 		var c: int = EntityRegistry.count_by_type(EntityTypes.EntityType.NUTRIENT)
-		print("[NutrientManager] spawned nutrient id=", id, " pos=", pos_world, " size=", size_value, " energy=", energy_value, " active=", c)
+		_log.info(LogDefs.CAT_SYSTEMS, [
+			"[NutrientManager] spawned nutrient",
+			"id=", id,
+			"pos=", pos_world,
+			"size=", size_value,
+			"energy=", energy_value,
+			"active=", c
+		])
 
 func _sample_world_point_random() -> Vector2:
 	if _dish == null:
