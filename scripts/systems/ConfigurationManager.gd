@@ -1,5 +1,6 @@
 extends Node
 const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
+const LogDefs = preload("res://scripts/systems/Log.gd")
 
 # Environment/dish configuration
 @export var dish_radius: float = 480.0
@@ -35,6 +36,9 @@ var entity_scene_paths: Dictionary = {
 	EntityTypes.EntityType.NUTRIENT: "res://scenes/entities/Nutrient.tscn"
 }
 
+# Logger autoload handle (resolved in _ready)
+var _log
+
 func get_entity_pool_size(entity_type: int) -> int:
 	return int(entity_pool_sizes.get(entity_type, 20))
 
@@ -42,12 +46,72 @@ func get_entity_scene_path(entity_type: int) -> String:
 	return String(entity_scene_paths.get(entity_type, ""))
 
 func _ready() -> void:
-	print("[ConfigurationManager] ready")
-	print("[ConfigurationManager] entity_pool_sizes =", entity_pool_sizes)
-	print("[ConfigurationManager] grid_cell_size =", grid_cell_size, " heatmap_default=", grid_debug_heatmap_default, " counts_default=", grid_debug_counts_default)
-	print("[ConfigurationManager] nutrient_target_count =", nutrient_target_count,
-		" size=[", nutrient_size_min, ",", nutrient_size_max, "]",
-		" energy=[", nutrient_energy_min, ",", nutrient_energy_max, "]",
-		" respawn_s=[", nutrient_respawn_delay_min, ",", nutrient_respawn_delay_max, "]",
-		" dist_mode=", nutrient_distribution_mode)
-	print("[ConfigurationManager] entity_scene_paths =", entity_scene_paths)
+	# Initialize logger defaults based on build mode
+	var dev := Engine.is_editor_hint() or OS.is_debug_build()
+	_log = get_node_or_null("/root/Log")
+	if _log == null:
+		# Fallback minimal notice to avoid hard failure if autoload isn't registered yet
+		print("[ConfigurationManager] ready (Log autoload missing)")
+		return
+	# Ensure InputMap contains debug actions (F9 / Shift+F9)
+	_ensure_input_actions()
+	# Per-category thresholds per proposal
+	_log.set_global_enabled(dev)
+	if dev:
+		_log.set_level(_log.CAT_CORE, _log.LEVEL_INFO)
+		_log.set_level(_log.CAT_SYSTEMS, _log.LEVEL_INFO)
+		_log.set_level(_log.CAT_PERF, _log.LEVEL_DEBUG)
+		_log.set_level(_log.CAT_COMPONENTS, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_AI, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_ENVIRONMENT, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_UI, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_EVENTS, _log.LEVEL_WARN)
+	else:
+		_log.set_level(_log.CAT_CORE, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_SYSTEMS, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_PERF, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_COMPONENTS, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_AI, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_ENVIRONMENT, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_UI, _log.LEVEL_WARN)
+		_log.set_level(_log.CAT_EVENTS, _log.LEVEL_WARN)
+	# Single summary line to avoid noise
+	_log.info(_log.CAT_SYSTEMS, [
+		"[ConfigurationManager] ready",
+		"grid_cell_size=", grid_cell_size,
+		"heatmap_default=", grid_debug_heatmap_default,
+		"counts_default=", grid_debug_counts_default,
+		"nutrients_target=", nutrient_target_count,
+		"size=[", nutrient_size_min, ",", nutrient_size_max, "]",
+		"energy=[", nutrient_energy_min, ",", nutrient_energy_max, "]",
+		"respawn_s=[", nutrient_respawn_delay_min, ",", nutrient_respawn_delay_max, "]",
+		"dist_mode=", nutrient_distribution_mode
+	])
+
+func _ensure_input_actions() -> void:
+	# debug_toggle_global: F9 (no shift)
+	if not InputMap.has_action("debug_toggle_global"):
+		InputMap.add_action("debug_toggle_global")
+	if not _has_key_event_for_action(&"debug_toggle_global", Key.KEY_F9, false):
+		var ev_toggle := InputEventKey.new()
+		ev_toggle.physical_keycode = Key.KEY_F9
+		ev_toggle.shift_pressed = false
+		ev_toggle.pressed = false
+		InputMap.action_add_event("debug_toggle_global", ev_toggle)
+	# debug_cycle_perf: Shift+F9
+	if not InputMap.has_action("debug_cycle_perf"):
+		InputMap.add_action("debug_cycle_perf")
+	if not _has_key_event_for_action(&"debug_cycle_perf", Key.KEY_F9, true):
+		var ev_cycle := InputEventKey.new()
+		ev_cycle.physical_keycode = Key.KEY_F9
+		ev_cycle.shift_pressed = true
+		ev_cycle.pressed = false
+		InputMap.action_add_event("debug_cycle_perf", ev_cycle)
+
+func _has_key_event_for_action(action_name: StringName, keycode: int, shift: bool) -> bool:
+	var events := InputMap.action_get_events(action_name)
+	for e in events:
+		var k := e as InputEventKey
+		if k and k.physical_keycode == keycode and k.shift_pressed == shift:
+			return true
+	return false

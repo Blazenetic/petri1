@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://d23tt73ww2mm8"]
 
-[ext_resource type="PackedScene" path="res://scenes/Game.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://mj47o2nb35u1" path="res://scenes/Game.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="2"]
-[ext_resource type="Script" path="res://scripts/systems/SpatialGrid.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/systems/NutrientManager.gd" id="4"]
+[ext_resource type="Script" uid="uid://ctblnnen0ebm8" path="res://scripts/systems/SpatialGrid.gd" id="3"]
+[ext_resource type="Script" uid="uid://6bpe80n2q22b" path="res://scripts/systems/NutrientManager.gd" id="4"]
 
 [node name="Main" type="Node2D"]
 

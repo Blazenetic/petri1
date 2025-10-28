@@ -1,6 +1,8 @@
 extends "res://scripts/components/EntityComponent.gd"
 class_name BiologicalComponent
 
+const LogDefs = preload("res://scripts/systems/Log.gd")
+var _log
 # BiologicalComponent
 # Stores and updates biological stats (energy, health, age) and reacts to nutrient consumption.
 # - Drains energy via metabolism each frame
@@ -14,7 +16,6 @@ class_name BiologicalComponent
 @export var health_start: float = 1.0
 @export var max_age_sec: float = 180.0 # 0 disables aging death
 @export var energy_from_nutrient_efficiency: float = 1.0
-@export var debug_logging: bool = false
 
 signal energy_changed(new_energy: float)
 signal died(reason: StringName)
@@ -34,6 +35,7 @@ func init(entity: Node) -> void:
 		return
 	_identity = _entity.identity
 	_physical = _entity.physical
+	_log = get_node_or_null("/root/Log")
 
 	# Initialize runtime fields
 	energy = clamp(energy_start, 0.0, energy_max)
@@ -46,8 +48,13 @@ func init(entity: Node) -> void:
 			GlobalEvents.connect("nutrient_consumed", Callable(self, "_on_nutrient_consumed"))
 		_connected = true
 
-	if debug_logging and _identity:
-		print("[BiologicalComponent] init id=", _identity.uuid, " energy=", energy, "/", energy_max, " max_age=", max_age_sec)
+	if _log != null and _log.enabled(LogDefs.CAT_COMPONENTS, LogDefs.LEVEL_DEBUG) and _identity:
+		_log.debug(LogDefs.CAT_COMPONENTS, [
+			"[BiologicalComponent] init",
+			"id=", _identity.uuid,
+			"energy=", energy, "/", energy_max,
+			"max_age=", max_age_sec
+		])
 
 func update(delta: float) -> void:
 	if delta <= 0.0 or _identity == null:
@@ -100,16 +107,26 @@ func _on_nutrient_consumed(nutrient_id: StringName, consumer_id: StringName) -> 
 	if added_energy > 0.0:
 		var prev := energy
 		energy = clamp(energy + added_energy * energy_from_nutrient_efficiency, 0.0, energy_max)
-		if debug_logging and _identity:
-			print("[BiologicalComponent] energy +=", added_energy, " eff=", energy_from_nutrient_efficiency, " => ", energy, "/", energy_max, " id=", _identity.uuid)
+		if _log != null and _log.enabled(LogDefs.CAT_COMPONENTS, LogDefs.LEVEL_DEBUG) and _identity:
+			_log.debug(LogDefs.CAT_COMPONENTS, [
+				"[BiologicalComponent] energy +=",
+				added_energy,
+				"eff=", energy_from_nutrient_efficiency,
+				"=>", energy, "/", energy_max,
+				"id=", _identity.uuid
+			])
 		if not is_equal_approx(prev, energy):
 			emit_signal("energy_changed", energy)
 
 func _request_death(reason: StringName) -> void:
 	if _identity == null or _identity.uuid.is_empty():
 		return
-	if debug_logging:
-		print("[BiologicalComponent] died reason=", reason, " id=", _identity.uuid)
+	if _log != null and _log.enabled(LogDefs.CAT_COMPONENTS, LogDefs.LEVEL_INFO):
+		_log.info(LogDefs.CAT_COMPONENTS, [
+			"[BiologicalComponent] died",
+			"reason=", reason,
+			"id=", _identity.uuid
+		])
 	emit_signal("died", reason)
 	# Ask factory to cleanly despawn (removes from EntityRegistry and returns to pool)
 	EntityFactory.destroy_entity(_identity.uuid, reason)

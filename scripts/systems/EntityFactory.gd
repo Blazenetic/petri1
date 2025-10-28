@@ -2,6 +2,8 @@ extends Node
 const EntityTypes = preload("res://scripts/components/EntityTypes.gd")
 
 const BASE_ENTITY_SCENE := "res://scenes/entities/BaseEntity.tscn"
+const LogDefs = preload("res://scripts/systems/Log.gd")
+var _log
 
 # Per-type scene mapping (PHASE 2.1)
 var _scene_map: Dictionary = {}
@@ -12,6 +14,7 @@ var _pool_container: Node
 var _default_pool: ObjectPool
 
 func _ready() -> void:
+	_log = get_node_or_null("/root/Log")
 	# Locate simulation attach point (compatible with Godot 4)
 	var scene_root: Node = get_tree().current_scene
 	if scene_root:
@@ -74,7 +77,13 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	var tracker: SpatialTrackerComponent = SpatialTrackerComponent.new()
 	node.add_component(tracker)
 	var id: StringName = node.identity.uuid
-	print("[EntityFactory] spawned ", id, " type=", entity_type, " pos=", position)
+	if _log != null:
+		_log.info(LogDefs.CAT_SYSTEMS, [
+			"[EntityFactory] spawned",
+			"id=", id,
+			"type=", entity_type,
+			"pos=", position
+		])
 	EntityRegistry.add(id, node, entity_type)
 	GlobalEvents.emit_signal("entity_spawned", id, entity_type, position)
 	return id
@@ -91,7 +100,13 @@ func destroy_entity(entity_id: StringName, reason: StringName = &"despawn") -> v
 	if node.get_parent() != null:
 		node.get_parent().remove_child(node)
 	pool.release(node)
-	print("[EntityFactory] destroyed id=", entity_id, " type=", node.entity_type, " reason=", reason)
+	if _log != null:
+		_log.info(LogDefs.CAT_SYSTEMS, [
+			"[EntityFactory] destroyed",
+			"id=", entity_id,
+			"type=", node.entity_type,
+			"reason=", reason
+		])
 
 # Convenience spawn helpers using PetriDish boundary and coordinate utilities
 
