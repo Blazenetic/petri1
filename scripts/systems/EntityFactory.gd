@@ -12,6 +12,7 @@ var _pools: Dictionary = {}
 var _root_parent: Node
 var _pool_container: Node
 var _default_pool: ObjectPool
+var _bacteria_system: Node
 
 func _ready() -> void:
 	_log = get_node_or_null("/root/Log")
@@ -38,6 +39,12 @@ func _ready() -> void:
 	
 	# Configure per-type pools (fallback safe if not defined yet)
 	var sizes_dict: Dictionary = ConfigurationManager.entity_pool_sizes
+	# Guardrail: bacteria pooling must be disabled when multimesh is active
+	if ConfigurationManager.is_bacteria_multimesh_enabled():
+		assert(not sizes_dict.has(EntityTypes.EntityType.BACTERIA), "Bacteria pool must be disabled in multimesh mode")
+		if _log != null and sizes_dict.has(EntityTypes.EntityType.BACTERIA):
+			_log.warn(LogDefs.CAT_SYSTEMS, ["[EntityFactory] bacteria pooling entry present with multimesh; assertion in dev, ignored in release"])
+
 	# Seed internal scene map from configuration if present
 	if "entity_scene_paths" in ConfigurationManager:
 		for k in ConfigurationManager.entity_scene_paths.keys():
@@ -52,7 +59,22 @@ func _ready() -> void:
 		pool.configure(scene_path, prewarm, _pool_container)
 		_pools[int(t)] = pool
 
+	# Cache BacteriaSystem when multimesh is active (pooling for bacteria is disabled)
+	if ConfigurationManager.is_bacteria_multimesh_enabled():
+		_bacteria_system = null
+		var scene_root2: Node = get_tree().current_scene
+		if scene_root2:
+			_bacteria_system = scene_root2.find_child("BacteriaSystem", true, false)
+		if _bacteria_system == null and _log != null:
+			_log.warn(LogDefs.CAT_SYSTEMS, ["[EntityFactory] multimesh enabled but BacteriaSystem not found"])
+
 func create_entity(entity_type: int, position: Vector2, params := {}) -> StringName:
+	# Multimesh path for bacteria: route to BacteriaSystem, do not instance nodes/components
+	if ConfigurationManager.is_bacteria_multimesh_enabled() and int(entity_type) == EntityTypes.EntityType.BACTERIA:
+		if _bacteria_system != null and _bacteria_system.has_method("spawn_bacteria"):
+			return _bacteria_system.spawn_bacteria(position, params)
+		return StringName()
+
 	var pool: ObjectPool = _pools.get(entity_type, _default_pool)
 	var node: BaseEntity = pool.acquire() as BaseEntity
 	if node == null:
@@ -77,8 +99,8 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 	var tracker: SpatialTrackerComponent = SpatialTrackerComponent.new()
 	node.add_component(tracker)
 	var id: StringName = node.identity.uuid
-	if _log != null:
-		_log.info(LogDefs.CAT_SYSTEMS, [
+	if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_DEBUG):
+		_log.debug(LogDefs.CAT_SYSTEMS, [
 			"[EntityFactory] spawned",
 			"id=", id,
 			"type=", entity_type,
@@ -91,6 +113,9 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 func destroy_entity(entity_id: StringName, reason: StringName = &"despawn") -> void:
 	var node: BaseEntity = EntityRegistry.get_by_id(entity_id) as BaseEntity
 	if node == null:
+		# Multimesh path: delegate to BacteriaSystem (EntityRegistry won't have bacteria entries)
+		if ConfigurationManager.is_bacteria_multimesh_enabled() and _bacteria_system != null and _bacteria_system.has_method("despawn_bacteria"):
+			_bacteria_system.despawn_bacteria(entity_id, reason)
 		return
 	node.deinit()
 	GlobalEvents.emit_signal("entity_destroyed", entity_id, node.entity_type, reason)

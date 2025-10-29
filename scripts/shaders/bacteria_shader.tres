@@ -1,0 +1,31 @@
+[gd_resource type="Shader" format=3]
+
+[resource]
+code = "shader_type canvas_item;
+render_mode unshaded, blend_mix;
+
+// Basic SDF circle using QuadMesh UV. Size is controlled by instance transform scale.
+// Per-instance color comes from MultiMesh instance color.
+// INSTANCE_CUSTOM reserved for future variants (shape, border, etc.).
+//   INSTANCE_CUSTOM.x = shape_type (0=circle reserved for Phase A)
+//   INSTANCE_CUSTOM.y = thickness/border (future use)
+//   INSTANCE_CUSTOM.zw = free
+
+uniform float edge_smooth : hint_range(0.0, 4.0) = 1.0;
+
+void fragment() {
+    // Centered UV in [-0.5, 0.5]
+    vec2 p = UV - vec2(0.5);
+    float r = 0.5; // half-extent of the unit quad
+    float d = length(p) - r;
+
+    // Smooth edge anti-aliasing
+    float aa = max(fwidth(d) * edge_smooth, 0.0005);
+    float alpha = smoothstep(0.0, aa, -d);
+
+    // Instance color from MultiMeshInstance2D
+    vec4 col = vec4(COLOR.rgb, COLOR.a * alpha);
+
+    COLOR = col;
+}
+"

@@ -8,3 +8,6 @@ export/
 .mono/
 .DS_Store
 Thumbs.db
+
+.vscode
+.roo
