@@ -24,6 +24,10 @@ var energy: float = 0.0
 var health: float = 0.0
 var age_sec: float = 0.0
 
+# Reproduction runtime fields (PHASE 2.2b)
+var repro_cooldown_timer: float = 0.0
+var pending_repro: bool = false
+
 var _entity: BaseEntity
 var _identity: IdentityComponent
 var _physical: PhysicalComponent
@@ -63,6 +67,10 @@ func update(delta: float) -> void:
 	# Aging
 	age_sec += delta
 
+	# Reproduction cooldown tick down
+	if repro_cooldown_timer > 0.0:
+		repro_cooldown_timer = max(0.0, repro_cooldown_timer - delta)
+	
 	# Metabolism energy drain
 	if metabolism_rate_per_sec > 0.0:
 		energy -= metabolism_rate_per_sec * delta
@@ -75,6 +83,41 @@ func update(delta: float) -> void:
 	if max_age_sec > 0.0 and age_sec >= max_age_sec:
 		_request_death(&"old_age")
 		return
+
+# Helper semantics (PHASE 2.2b)
+func should_reproduce() -> bool:
+	if _identity == null:
+		return false
+	if pending_repro:
+		return false
+	# Thresholds read from ConfigurationManager (autoload)
+	var threshold: float = 0.0
+	var cd: float = repro_cooldown_timer
+	if ConfigurationManager != null and "bacteria_repro_energy_threshold" in ConfigurationManager:
+		threshold = float(ConfigurationManager.bacteria_repro_energy_threshold)
+	return energy >= threshold and cd <= 0.0
+
+# Performs energy cost, computes split, applies cooldown. Returns child energy.
+func apply_reproduction_bookkeeping() -> float:
+	var cost_ratio: float = 0.2
+	var split_ratio: float = 0.5
+	var cooldown_s: float = 8.0
+	if ConfigurationManager != null:
+		if "bacteria_repro_energy_cost_ratio" in ConfigurationManager:
+			cost_ratio = clamp(float(ConfigurationManager.bacteria_repro_energy_cost_ratio), 0.0, 1.0)
+		if "bacteria_offspring_energy_split_ratio" in ConfigurationManager:
+			split_ratio = clamp(float(ConfigurationManager.bacteria_offspring_energy_split_ratio), 0.0, 1.0)
+		if "bacteria_repro_cooldown_sec" in ConfigurationManager:
+			cooldown_s = max(0.0, float(ConfigurationManager.bacteria_repro_cooldown_sec))
+	var e: float = max(0.0, energy)
+	var cost: float = e * cost_ratio
+	var after_cost: float = max(0.0, e - cost)
+	var child_e: float = after_cost * split_ratio
+	var parent_e: float = after_cost - child_e
+	energy = clamp(parent_e, 0.0, energy_max)
+	repro_cooldown_timer = cooldown_s
+	emit_signal("energy_changed", energy)
+	return child_e
 
 func cleanup() -> void:
 	# Unsubscribe to prevent leaks
@@ -93,10 +136,10 @@ func _on_nutrient_consumed(nutrient_id: StringName, consumer_id: StringName) -> 
 
 	# Resolve nutrient energy value (if still valid)
 	var added_energy: float = 0.0
-	var node := EntityRegistry.get_by_id(nutrient_id)
+	var node: Node = EntityRegistry.get_by_id(nutrient_id)
 	if node != null and is_instance_valid(node):
 		# Try to locate a NutrientComponent to read its energy_value
-		var comps := node.get_node_or_null("Components")
+		var comps: Node = node.get_node_or_null("Components")
 		if comps:
 			for c in comps.get_children():
 				if c is NutrientComponent:
@@ -105,7 +148,7 @@ func _on_nutrient_consumed(nutrient_id: StringName, consumer_id: StringName) -> 
 
 	# Apply efficiency and clamp
 	if added_energy > 0.0:
-		var prev := energy
+		var prev: float = energy
 		energy = clamp(energy + added_energy * energy_from_nutrient_efficiency, 0.0, energy_max)
 		if _log != null and _log.enabled(LogDefs.CAT_COMPONENTS, LogDefs.LEVEL_DEBUG) and _identity:
 			_log.debug(LogDefs.CAT_COMPONENTS, [
@@ -128,5 +171,14 @@ func _request_death(reason: StringName) -> void:
 			"id=", _identity.uuid
 		])
 	emit_signal("died", reason)
-	# Ask factory to cleanly despawn (removes from EntityRegistry and returns to pool)
-	EntityFactory.destroy_entity(_identity.uuid, reason)
+	# If a BehaviorController is present, let it own the destruction flow (PHASE 2.2b)
+	var intercepted := false
+	if _entity != null:
+		var comps := _entity.get_node_or_null("Components")
+		if comps:
+			var bc := comps.get_node_or_null("BehaviorController")
+			if bc != null:
+				intercepted = true
+	# Fallback to immediate destroy if no controller present
+	if not intercepted:
+		EntityFactory.destroy_entity(_identity.uuid, reason)

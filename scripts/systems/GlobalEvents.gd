@@ -10,6 +10,10 @@ signal entity_destroyed(entity_id: StringName, entity_type: int, reason: StringN
 signal nutrient_spawned(entity_id: StringName, position: Vector2, energy: float)
 signal nutrient_consumed(entity_id: StringName, consumer_id: StringName)
 
+# Phase 2.2b lifecycle events
+signal bacteria_reproduction_started(entity_id: StringName)
+signal bacteria_reproduction_completed(parent_id: StringName, child_id: StringName)
+signal entity_died(entity_id: StringName, entity_type: int, cause: StringName)
 func _ready():
 	_log = get_node_or_null("/root/Log")
 	if _log != null:

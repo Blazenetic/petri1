@@ -24,6 +24,13 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var nutrient_clustered_spread: float = 48.0
 @export var nutrient_uniform_cell_size: float = 48.0
 
+# Bacteria reproduction configuration (PHASE 2.2b)
+@export var bacteria_repro_energy_threshold: float = 10.0
+@export var bacteria_repro_cooldown_sec: float = 8.0
+@export var bacteria_repro_energy_cost_ratio: float = 0.2
+@export var bacteria_offspring_energy_split_ratio: float = 0.5
+@export var bacteria_offspring_offset_radius: float = 10.0
+@export var bacteria_max_children_per_min: int = 20
 # Bacteria rendering configuration (Phase A)
 @export var bacteria_render_mode: int = 1 # 0=node_based, 1=multimesh
 @export var bacteria_max_instances: int = 10000
