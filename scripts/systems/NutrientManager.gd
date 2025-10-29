@@ -44,7 +44,17 @@ func _ready() -> void:
 	var current: int = EntityRegistry.count_by_type(EntityTypes.EntityType.NUTRIENT)
 	var missing: int = max(0, target_count - current)
 	if missing > 0:
+		var before: int = current
 		_spawn_now(missing, distribution_mode)
+		if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_INFO):
+			var after: int = EntityRegistry.count_by_type(EntityTypes.EntityType.NUTRIENT)
+			_log.info(LogDefs.CAT_SYSTEMS, [
+				"[NutrientManager] initial spawn summary",
+				"added=", after - before,
+				"target=", target_count,
+				"active=", after,
+				"mode=", distribution_mode
+			])
 
 func _load_defaults_from_config() -> void:
 	# Always mirror current configuration values into exported fields for now
@@ -204,15 +214,13 @@ func _spawn_nutrient_instance(pos_world: Vector2, size_value: float, energy_valu
 		if comp:
 			comp.set_energy_value(energy_value)
 	GlobalEvents.emit_signal("nutrient_spawned", id, pos_world, energy_value)
-	if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_INFO):
-		var c: int = EntityRegistry.count_by_type(EntityTypes.EntityType.NUTRIENT)
-		_log.info(LogDefs.CAT_SYSTEMS, [
+	if _log != null and _log.enabled(LogDefs.CAT_SYSTEMS, LogDefs.LEVEL_DEBUG):
+		_log.debug(LogDefs.CAT_SYSTEMS, [
 			"[NutrientManager] spawned nutrient",
 			"id=", id,
 			"pos=", pos_world,
 			"size=", size_value,
-			"energy=", energy_value,
-			"active=", c
+			"energy=", energy_value
 		])
 
 func _sample_world_point_random() -> Vector2:

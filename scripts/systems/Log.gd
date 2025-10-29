@@ -26,11 +26,18 @@ var editor_defaults_applied: bool = false
 
 # Rate limiting state for Log.every
 var _every_last_time: Dictionary = {} # key -> seconds (float)
+# Async sink to avoid console IO stalls and editor hitches
+var async_enabled: bool = true
+var max_prints_per_frame: int = 40
+var _pending: Array = [] # of {l:int, m:String}
+var _pending_capacity: int = 2000
+var _dropped_since_last: int = 0
 
 func _ready() -> void:
 	# Initialize category thresholds with build-aware defaults.
 	_apply_build_defaults()
 	set_process_unhandled_key_input(true)
+	set_process(async_enabled)
 
 func set_global_enabled(enabled: bool) -> void:
 	global_enabled = enabled
@@ -112,9 +119,15 @@ func _sink(level: int, msg: String) -> void:
 		LEVEL_ERROR:
 			push_error(msg)
 		LEVEL_WARN:
-			push_warning(msg)
+			if async_enabled:
+				_enqueue(level, msg)
+			else:
+				push_warning(msg)
 		_:
-			print(msg)
+			if async_enabled:
+				_enqueue(level, msg)
+			else:
+				print(msg)
 
 func _level_to_name(level: int) -> String:
 	match level:
@@ -137,6 +150,8 @@ func _apply_build_defaults() -> void:
 	var dev_build: bool = Engine.is_editor_hint() or OS.is_debug_build()
 	# Global toggle: on in editor/dev, warn+ only logging but still enabled in export to allow toggling at runtime
 	global_enabled = dev_build
+	# Enable async sink in editor/dev to avoid stalls from bursts
+	async_enabled = dev_build
 	# Thresholds
 	if dev_build:
 		set_level(CAT_CORE, LEVEL_INFO)
@@ -161,15 +176,20 @@ func _apply_build_defaults() -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	# Crisp, non-intrusive handling: only process non-echo key press events,
-	# rely strictly on InputMap actions, and do not swallow input for others.
+	# rely strictly on InputMap actions. In non-editor builds, accept the event
+	# to prevent propagation to other systems (no editor shortcut conflicts).
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
 	if event.is_action_pressed(&"debug_toggle_global"):
 		global_enabled = not global_enabled
 		print("[Log] global_enabled=", global_enabled)
+		if not Engine.is_editor_hint():
+			get_tree().set_input_as_handled()
 	elif event.is_action_pressed(&"debug_cycle_perf"):
 		_cycle_perf_level()
+		if not Engine.is_editor_hint():
+			get_tree().set_input_as_handled()
 
 func _cycle_perf_level() -> void:
 	var cur: int = get_level(CAT_PERF)
@@ -188,3 +208,36 @@ func _cycle_perf_level() -> void:
 	set_level(CAT_PERF, next)
 	# Announce change regardless of thresholds
 	print("[Log] perf threshold -> ", _level_to_name(next))
+
+# Async sink queue and draining
+func _enqueue(level: int, msg: String) -> void:
+	if _pending.size() < _pending_capacity:
+		_pending.append({"l": level, "m": msg})
+	else:
+		_dropped_since_last += 1
+	if not is_processing():
+		set_process(true)
+
+func _process(_delta: float) -> void:
+	var budget: int = int(max(1, max_prints_per_frame))
+	# Emit drop summary first if any
+	if _dropped_since_last > 0 and budget > 0:
+		print("[Log] dropped=", _dropped_since_last, " messages due to rate limiting")
+		_dropped_since_last = 0
+		budget -= 1
+	while budget > 0 and _pending.size() > 0:
+		var it: Dictionary = _pending[0] as Dictionary
+		_pending.remove_at(0)
+		var lvl: int = int(it.get("l", LEVEL_INFO))
+		var m: String = String(it.get("m", ""))
+		match lvl:
+			LEVEL_WARN:
+				push_warning(m)
+			LEVEL_ERROR:
+				push_error(m)
+			_:
+				print(m)
+		budget -= 1
+	# Stop processing when queue is empty to avoid overhead
+	if _pending.is_empty():
+		set_process(false)
