@@ -3,6 +3,8 @@ class_name IdentityComponent
 
 var uuid: StringName
 var entity_type: int = 0
+var generation: int = 0
+var parent_id: StringName = StringName()
 
 static func _generate_uuid() -> StringName:
 	var rng := RandomNumberGenerator.new()

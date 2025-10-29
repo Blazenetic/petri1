@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/components/BaseEntity.gd" id=1]
 [ext_resource type="Script" path="res://scripts/components/MovementComponent.gd" id=2]
 [ext_resource type="Script" path="res://scripts/behaviors/SeekNutrient.gd" id=3]
 [ext_resource type="Script" path="res://scripts/components/BiologicalComponent.gd" id=4]
 [ext_resource type="Script" path="res://scripts/behaviors/RandomWander.gd" id=5]
+[ext_resource type="Script" path="res://scripts/behaviors/BehaviorController.gd" id=6]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 8.0
@@ -19,6 +20,14 @@ base_color = Color(0.3, 0.8, 0.3, 1)
 
 [node name="Collider" type="CollisionShape2D" parent="."]
 shape = SubResource(1)
+
+; Binary fission burst VFX (initially off)
+[node name="FissionBurst" type="CPUParticles2D" parent="."]
+emitting = false
+one_shot = true
+amount = 24
+lifetime = 0.3
+explosiveness = 0.9
 
 [node name="Components" type="Node" parent="."]
 
@@ -49,3 +58,7 @@ script = ExtResource(3)
 ; slow_radius = 24.0
 ; use_spatial_grid = true
 ; debug_draw_target = false
+
+; Temporary behavior controller (Phase 2.2b)
+[node name="BehaviorController" type="Node" parent="Components"]
+script = ExtResource(6)
