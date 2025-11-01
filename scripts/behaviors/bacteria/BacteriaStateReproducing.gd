@@ -74,8 +74,10 @@ func _finish_reproduction(owner, child_id: StringName) -> void:
 		bc.sm.set_state(bc, &"Seeking", bc.state_seeking)
 
 func update(owner, delta: float) -> void:
-	# No per-frame logic; sequence is tween-driven
-	pass
+	# Enforce no steering during reproduction; override other behaviors each frame
+	var bc: BehaviorController = owner as BehaviorController
+	if _running and bc:
+		bc.zero_accel()
 
 func exit(owner) -> void:
 	_running = false

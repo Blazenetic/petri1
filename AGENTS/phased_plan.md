@@ -68,13 +68,13 @@ This todo list provides concrete, actionable implementation tasks for AI coding 
 - [x] Create nutrient distribution patterns (random, clustered, uniform)
 
 ### 2.2 Bacteria Implementation
-- [ ] Create Bacteria scene with appropriate sprites/shapes
-- [ ] Implement BiologicalComponent with energy, health, age
-- [ ] Add energy consumption over time (metabolism)
-- [ ] Create SeekNutrient behavior using spatial queries
-- [ ] Implement asexual reproduction when energy threshold reached
-- [ ] Add binary fission animation and effects
-- [ ] Create bacteria death conditions and cleanup
+- [x] Create Bacteria scene with appropriate sprites/shapes
+- [x] Implement BiologicalComponent with energy, health, age
+- [x] Add energy consumption over time (metabolism)
+- [x] Create SeekNutrient behavior using spatial queries
+- [x] Implement asexual reproduction when energy threshold reached
+- [x] Add binary fission animation and effects
+- [x] Create bacteria death conditions and cleanup
 
 ### 2.3 State Machine System
 - [ ] Implement StateMachine base class with state stack

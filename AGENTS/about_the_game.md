@@ -22,7 +22,6 @@ Petri Pandemonium places players in the role of a scientist observing and experi
 
 ### Target Platform
 - Primary: Desktop (Windows, macOS, Linux) via Godot export.
-- Secondary: Web export for browser play; mobile if time allows (touch controls for interventions).
 
 ### Art Style
 - Visuals: Minimalist 2D – circles/ellipses for organisms, particle effects for actions (e.g., division, death). Petri dish as a circular boundary with subtle agar texture.
@@ -77,14 +76,13 @@ These add polish and replayability without overcomplicating the core.
 - Multiplayer/co-op.
 - Advanced AI (e.g., neural networks).
 - 3D graphics or complex shaders.
-- Extensive audio mixing.
 - Full modding system (though design for extensibility).
 
 ## Technical Requirements and Guidelines
 
 ### Engine and Tools
 - Godot 4.5+ for its improved 2D features and performance.
-- Language: GDScript for rapid prototyping; consider C# if performance bottlenecks arise.
+- Language: GDScript for rapid prototyping
 - Dependencies: None external; use built-in nodes (Area2D, RigidBody2D, ParticleSystem2D).
 
 ### High-Level Architecture
@@ -99,10 +97,4 @@ These add polish and replayability without overcomplicating the core.
   - Traits as dictionaries or custom resources.
   - Save/load states: Serialize ecosystem for resuming experiments (Godot's ResourceSaver).
 - **Testing**:
-  - Unit tests for behaviors (Godot's GUT plugin if needed).
   - Playtesting focus: Balance emergence without frustration.
-
-### Potential Challenges and Mitigations
-- Lag with many entities: Limit instances; use pooling for nutrients/particles.
-- Balancing emergence: Tune parameters via exposed variables in editor.
-- UI Responsiveness: Separate simulation thread if needed (Godot Workers).

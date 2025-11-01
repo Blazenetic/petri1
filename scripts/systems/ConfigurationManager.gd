@@ -9,7 +9,7 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var grid_debug_counts_default: bool = false
 
 # Nutrient system configuration (PHASE 2.1)
-@export var nutrient_target_count: int = 20
+@export var nutrient_target_count: int = 200
 @export var nutrient_spawn_margin: float = 16.0
 @export var nutrient_size_min: float = 3.0
 @export var nutrient_size_max: float = 8.0
@@ -24,8 +24,8 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var nutrient_uniform_cell_size: float = 48.0
 
 # Bacteria reproduction configuration (PHASE 2.2b)
-@export var bacteria_repro_energy_threshold: float = 10.0
-@export var bacteria_repro_cooldown_sec: float = 8.0
+@export var bacteria_repro_energy_threshold: float = 6.0
+@export var bacteria_repro_cooldown_sec: float = 4.0
 @export var bacteria_repro_energy_cost_ratio: float = 0.2
 @export var bacteria_offspring_energy_split_ratio: float = 0.5
 @export var bacteria_offspring_offset_radius: float = 10.0

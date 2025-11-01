@@ -1,5 +1,6 @@
 # System Architecture v2
 
+The game simulates a virtual Petri dish where players can observe and interact with microorganisms in a sandbox environment, emphasizing emergent behaviors, biological interactions, and educational elements. The target is an MVP+ (Minimum Viable Product with select enhancements) to ensure a polished core experience while allowing for future expansions.
 
 This document defines the system architecture for Petri Pandemonium, a 2D microorganism simulation game. The architecture prioritizes modularity, performance optimization for entity-heavy simulation, and clear separation of concerns. The design supports an MVP+ scope with provisions for future expansion including evolution mechanics, multiple game modes, and player intervention tools.
 
@@ -42,7 +43,7 @@ The system follows a layered architecture pattern with unidirectional dependenci
 
 ## Petri Pandemonium — MultiMesh based Rendering Architecture
 
-Purpose: replace the prior pooling centric design with a GPU instancing centric approach using MultiMeshInstance2D while preserving our modular, layered architecture and enabling scalable populations. Audience: AI code agents contributing to design and implementation across systems, guided by [AGENTS/proposal.md](AGENTS/proposal.md) and superseding the pooling guidance in [AGENTS/system_architecture.md](AGENTS/system_architecture.md).
+Purpose: replace the prior pooling centric design with a GPU instancing centric approach using MultiMeshInstance2D while preserving our modular, layered architecture and enabling scalable populations. Audience: AI code agents contributing to design and implementation across systems, guided by [AGENTS/proposal.md] and superseding the pooling guidance in [AGENTS/system_architecture.md].
 
 ---
 ---
@@ -67,40 +68,6 @@ Key cross layer contracts:
 
 ## 3. Core systems overview
 
-
-
-
-
-
-
-
-
-
-
-
-- UI System UIS
-  - Heads up display, stats, and controls.
-
-
-- Environment and World
-  - Petri dish boundary and debug draw.
-
-
-- Game composition
-  - Scene topology and systems wiring.
-  - Relevant scenes
-    - [scenes/Game.tscn](scenes/Game.tscn)
-    - [scenes/Main.tscn](scenes/Main.tscn)
-
----
-
-
-
-
-
-
-
-
 ### 3.1  Module Specifications
 
 ### 3.1.1 Entity Management System (EMS)
@@ -110,23 +77,23 @@ Key cross layer contracts:
   - Creates and destroys entities via the factory, updates registry, and emits events.
   - Does not perform pooling for simulation entities, insteaed uses MultiMeshInstance2D
   - Relevant files
-    - [scripts/systems/EntityFactory.gd](scripts/systems/EntityFactory.gd)
-    - [scripts/systems/EntityRegistry.gd](scripts/systems/EntityRegistry.gd)
+    - [scripts/systems/EntityFactory.gd]
+    - [scripts/systems/EntityRegistry.gd]
 
 - Rendering and Instancing System RIS
   - Manages MultiMeshInstance2D renderers partitioned by species or visual archetype.
   - Owns instance index allocation, updates, and reclamation.
   - Batch flushes per frame to minimize API calls.
   - Candidate files and scenes
-    - [scripts/rendering/BacteriaRenderer.gd](scripts/rendering/BacteriaRenderer.gd)
-    - [scenes/renderers/BacteriaRenderer.tscn](scenes/renderers/BacteriaRenderer.tscn)
+    - [scripts/rendering/BacteriaRenderer.gd]
+    - [scenes/renderers/BacteriaRenderer.tscn]
 
 ### 3.1.2 Behavior Control System (BCS)
 
 **Purpose**: Orchestrates AI behaviors and decision-making for all organisms.
   - Relevant files
-    - [scripts/behaviors/RandomWander.gd](scripts/behaviors/RandomWander.gd)
-    - [scripts/behaviors/SeekNutrient.gd](scripts/behaviors/SeekNutrient.gd)
+    - [scripts/behaviors/RandomWander.gd]
+    - [scripts/behaviors/SeekNutrient.gd]
 
 **Architecture Pattern**: Hybrid State Machine with Utility AI scoring
 
@@ -167,9 +134,9 @@ BaseBehavior
 
 **Purpose**: Manages spatial relationships, movement, and collision detection.
     - Relevant files
-        - [scripts/systems/SpatialGrid.gd](scripts/systems/SpatialGrid.gd)
-        - [scripts/components/MovementComponent.gd](scripts/components/MovementComponent.gd)
-        - [scripts/components/SpatialTrackerComponent.gd](scripts/components/SpatialTrackerComponent.gd)
+        - [scripts/systems/SpatialGrid.gd]
+        - [scripts/components/MovementComponent.gd]
+        - [scripts/components/SpatialTrackerComponent.gd]
 
 **Approach**: Hybrid system using Godot's Physics2D for collisions, custom logic for movement and spatial queries.
 
@@ -191,7 +158,7 @@ BaseBehavior
 
 **Purpose**: Handles nutrients, energy, and environmental resources.
     - Relevant files
-        - [scripts/systems/NutrientManager.gd](scripts/systems/NutrientManager.gd)
+        - [scripts/systems/NutrientManager.gd]
 
 **Core Components:**
 - **NutrientManager**: Spawns, tracks, and replenishes nutrients
@@ -210,7 +177,7 @@ BaseBehavior
 
 **Purpose**: Decouples systems through event-driven architecture.
   - Relevant files
-    - [scripts/systems/GlobalEvents.gd](scripts/systems/GlobalEvents.gd)
+    - [scripts/systems/GlobalEvents.gd]
 
 **Implementation**: Observer pattern with typed events
 
@@ -230,8 +197,10 @@ BaseBehavior
 ### 3.1.6 User Interface System (UIS)
 
 **Purpose**: Manages all UI elements and user interactions.
+- - Heads up display, stats, and controls.
   - Relevant scenes
-    - [scenes/ui/HUD.tscn](scenes/ui/HUD.tscn)
+    - [scenes/ui/HUD.tscn]
+
 
 **Layer Structure:**
 ```
@@ -300,6 +269,9 @@ AbstractTool (Base)
 ---
 
 ### 3.1.8 World State Model
+
+- Environment and World
+  - Petri dish boundary and debug draw.
 
 **Global State Structure:**
 ```
@@ -370,7 +342,7 @@ Integration points
 
 Debugging and telemetry
 - Optional overlay to visualize instance indices and renderer partitions.
-- Periodic logging at reduced frequency via [scripts/systems/Log.gd](scripts/systems/Log.gd).
+- Periodic logging at reduced frequency via [scripts/systems/Log.gd].
 
 ---
 
@@ -386,7 +358,7 @@ Factory and registry
 - Registry is authoritative for id, type, and lookup lists, enabling RIS to find targets.
 
 Legacy pooling
-- The generic pool in [scripts/utils/ObjectPool.gd](scripts/utils/ObjectPool.gd) remains available for non simulation utilities such as transient UI or audio if required.
+- The generic pool in [scripts/utils/ObjectPool.gd] remains available for non simulation utilities such as transient UI or audio if required.
 - EMS does not reuse pooled Nodes for organisms and nutrients under the MultiMesh approach.
 
 ---
@@ -442,7 +414,7 @@ Render handle fields
 
 Component model implications
 - RenderComponent now holds RenderHandle and visual traits, but does not own drawing logic.
-- BaseEntity keeps a debug draw path only for developer visualization and is disabled in production builds. See [scripts/components/BaseEntity.gd](scripts/components/BaseEntity.gd).
+- BaseEntity keeps a debug draw path only for developer visualization and is disabled in production builds. See [scripts/components/BaseEntity.gd].
 
 World state and statistics
 - RIS exposes counts per renderer used by population metrics and UI.
@@ -526,38 +498,48 @@ What remains
 - Registry, behaviors, spatial grid, and events maintain the same interfaces and responsibilities.
 
 Where pooling still applies
-- Short lived UI or audio objects may still use [scripts/utils/ObjectPool.gd](scripts/utils/ObjectPool.gd) if needed.
+- Short lived UI or audio objects may still use [scripts/utils/ObjectPool.gd] if needed.
 - Effects may later move to GPU particles for similar batching gains.
 
 Potential renderer files
-- Bacteria visuals expected under [scripts/rendering/BacteriaRenderer.gd](scripts/rendering/BacteriaRenderer.gd) and [scenes/renderers/BacteriaRenderer.tscn](scenes/renderers/BacteriaRenderer.tscn).
+- Bacteria visuals expected under [scripts/rendering/BacteriaRenderer.gd] and [scenes/renderers/BacteriaRenderer.tscn].
 
 ---
 
 ## 11. Scene and file topology
 
 - Core scenes
-  - [scenes/Main.tscn](scenes/Main.tscn)
-  - [scenes/Game.tscn](scenes/Game.tscn)
-  - [scenes/environments/PetriDish.tscn](scenes/environments/PetriDish.tscn)
-  - [scenes/ui/HUD.tscn](scenes/ui/HUD.tscn)
+  - [scenes/Main.tscn]
+  - [scenes/Game.tscn]
+  - [scenes/environments/PetriDish.tscn]
+  - [scenes/ui/HUD.tscn]
+
+
+- Autoloads (globals):
+  - GlobalEvents.gd
+  - WorldState.gd
+  - ConfigurationManager.gd
+  - EntityRegistry.gd
+  - EntityFactory.gd
+  - Log.gd
+
 
 - Scripts
   - Systems
-    - [scripts/systems/EntityFactory.gd](scripts/systems/EntityFactory.gd)
-    - [scripts/systems/EntityRegistry.gd](scripts/systems/EntityRegistry.gd)
-    - [scripts/systems/SpatialGrid.gd](scripts/systems/SpatialGrid.gd)
-    - [scripts/systems/NutrientManager.gd](scripts/systems/NutrientManager.gd)
-    - [scripts/systems/GlobalEvents.gd](scripts/systems/GlobalEvents.gd)
+    - [scripts/systems/EntityFactory.gd]
+    - [scripts/systems/EntityRegistry.gd]
+    - [scripts/systems/SpatialGrid.gd]
+    - [scripts/systems/NutrientManager.gd]
+    - [scripts/systems/GlobalEvents.gd]
   - Components
-    - [scripts/components/BaseEntity.gd](scripts/components/BaseEntity.gd)
-    - [scripts/components/MovementComponent.gd](scripts/components/MovementComponent.gd)
-    - [scripts/components/SpatialTrackerComponent.gd](scripts/components/SpatialTrackerComponent.gd)
+    - [scripts/components/BaseEntity.gd]
+    - [scripts/components/MovementComponent.gd]
+    - [scripts/components/SpatialTrackerComponent.gd]
   - Rendering
-    - [scripts/rendering/BacteriaRenderer.gd](scripts/rendering/BacteriaRenderer.gd)
+    - [scripts/rendering/BacteriaRenderer.gd]
 
 - Renderers scenes
-  - [scenes/renderers/BacteriaRenderer.tscn](scenes/renderers/BacteriaRenderer.tscn)
+  - [scenes/renderers/BacteriaRenderer.tscn]
 
 Note: if a referenced renderer file is absent, create it under the indicated path to align with this architecture.
 
@@ -572,7 +554,7 @@ Note: if a referenced renderer file is absent, create it under the indicated pat
 - Risk logic render desynchronization
   - Mitigation maintain render handle on entity and validate at key events.
 - Risk excessive logs during stress
-  - Mitigation use throttled logging through [scripts/systems/Log.gd](scripts/systems/Log.gd).
+  - Mitigation use throttled logging through [scripts/systems/Log.gd].
 
 ---
 

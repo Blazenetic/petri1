@@ -11,15 +11,16 @@ func enter(owner) -> void:
 	# Defensive: reset visuals in case a prior state left them altered
 	if owner == null:
 		return
-	var be: BaseEntity = owner as BaseEntity
-	if be:
+	var bc: BehaviorController = owner as BehaviorController
+	if bc and bc._be:
 		# Ensure alpha fully visible
+		var be: BaseEntity = bc._be
 		var c: Color = be.base_color
 		c.a = 1.0
 		be.base_color = c
 		# Ensure PhysicalComponent size is consistent with BaseEntity.size
-		if be.physical:
-			be.physical.size = be.size
+		if bc._phys:
+			bc._phys.size = be.size
 	# No other side-effects; Seeking lets existing components act
 
 func update(owner, delta: float) -> void:
