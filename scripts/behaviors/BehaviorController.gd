@@ -131,9 +131,10 @@ func start_fission_burst() -> void:
 	if _fx:
 		# Match particles to current organism tint for a cohesive look
 		_fx.modulate = _be.base_color if _be else Color.WHITE
-		_fx.emitting = false
 		_fx.one_shot = true
-		_fx.restart()
+		# Safely trigger a fresh one-shot burst across pooled instances
+		_fx.emitting = false
+		_fx.set_deferred("emitting", true)
 
 # Spawns child, applies inheritance and bookkeeping results; returns { "id": StringName, "node": BaseEntity }
 func spawn_offspring(child_energy: float) -> Dictionary:
