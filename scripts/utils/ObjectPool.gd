@@ -1,5 +1,8 @@
 extends Node
 class_name ObjectPool
+# DEPRECATION: Not used by core entity lifecycle (EMS) after refactor to instantiate/queue_free.
+# Retained for UI/effects or other non-simulation pooling. See [system_architecture_v2.md](AGENTS/system_architecture_v2.md:44).
+# Safe to keep as an optional utility; remove any core dependencies.
 
 var _scene: PackedScene
 var _available: Array[Node] = []

@@ -8,10 +8,7 @@ var _log
 # Per-type scene mapping (PHASE 2.1)
 var _scene_map: Dictionary = {}
  
-var _pools: Dictionary = {}
 var _root_parent: Node
-var _pool_container: Node
-var _default_pool: ObjectPool
 
 func _ready() -> void:
 	_log = get_node_or_null("/root/Log")
@@ -24,37 +21,19 @@ func _ready() -> void:
 			_root_parent = scene_root
 		else:
 			_root_parent = get_tree().get_root()
-	
-	# Container to hold pooled instances when inactive
-	_pool_container = Node.new()
-	_pool_container.name = "PoolContainer"
-	add_child(_pool_container)
-	
-	# Default/fallback pool
-	_default_pool = ObjectPool.new()
-	add_child(_default_pool)
-	_default_pool.configure(BASE_ENTITY_SCENE, 20, _pool_container)
-	_pools[EntityTypes.EntityType.UNKNOWN] = _default_pool
-	
-	# Configure per-type pools (fallback safe if not defined yet)
-	var sizes_dict: Dictionary = ConfigurationManager.entity_pool_sizes
 	# Seed internal scene map from configuration if present
 	if "entity_scene_paths" in ConfigurationManager:
 		for k in ConfigurationManager.entity_scene_paths.keys():
 			_scene_map[int(k)] = String(ConfigurationManager.entity_scene_paths[k])
-	for t in sizes_dict.keys():
-		var prewarm: int = int(sizes_dict[t])
-		var pool: ObjectPool = ObjectPool.new()
-		add_child(pool)
-		var scene_path: String = String(_scene_map.get(int(t), BASE_ENTITY_SCENE))
-		if scene_path == "":
-			scene_path = BASE_ENTITY_SCENE
-		pool.configure(scene_path, prewarm, _pool_container)
-		_pools[int(t)] = pool
 
-func create_entity(entity_type: int, position: Vector2, params := {}) -> StringName:
-	var pool: ObjectPool = _pools.get(entity_type, _default_pool)
-	var node: BaseEntity = pool.acquire() as BaseEntity
+func create_entity(entity_type: int, position: Vector2, params: Dictionary = {}) -> StringName:
+	var scene_path: String = String(_scene_map.get(int(entity_type), BASE_ENTITY_SCENE))
+	if scene_path == "":
+		scene_path = BASE_ENTITY_SCENE
+	var packed: PackedScene = load(scene_path) as PackedScene
+	if packed == null:
+		return StringName()
+	var node: BaseEntity = packed.instantiate() as BaseEntity
 	if node == null:
 		return StringName()
 	# Prepare instance
@@ -64,7 +43,7 @@ func create_entity(entity_type: int, position: Vector2, params := {}) -> StringN
 		merged[k] = params[k]
 	# Move into live scene tree first so _ready runs and components are attached
 	_root_parent.add_child(node)
-	# Ensure identity exists even if this is a freshly instantiated (non-prewarmed) node
+	# Ensure identity exists even if this is a freshly instantiated node
 	if node.identity == null:
 		var ident: IdentityComponent = IdentityComponent.new()
 		node.add_component(ident)
@@ -95,11 +74,9 @@ func destroy_entity(entity_id: StringName, reason: StringName = &"despawn") -> v
 	node.deinit()
 	GlobalEvents.emit_signal("entity_destroyed", entity_id, node.entity_type, reason)
 	EntityRegistry.remove(entity_id)
-	
-	var pool: ObjectPool = _pools.get(node.entity_type, _default_pool)
 	if node.get_parent() != null:
 		node.get_parent().remove_child(node)
-	pool.release(node)
+	node.queue_free()
 	if _log != null:
 		_log.info(LogDefs.CAT_SYSTEMS, [
 			"[EntityFactory] destroyed",
@@ -138,11 +115,6 @@ func create_entity_clamped(entity_type: int, position: Vector2, entity_radius: f
 # Register/override a scene path for a specific entity type (PHASE 2.1)
 func register_entity_scene(entity_type: int, scene_path: String) -> void:
 	_scene_map[int(entity_type)] = scene_path
-	# Reconfigure pool if it already exists to use the new scene mapping
-	var pool: ObjectPool = _pools.get(int(entity_type), null)
-	if pool != null:
-		var prewarm: int = int(ConfigurationManager.get_entity_pool_size(int(entity_type)))
-		pool.configure(scene_path, prewarm, _pool_container)
 
 func get_scene_path_for_type(entity_type: int) -> String:
 	return String(_scene_map.get(int(entity_type), BASE_ENTITY_SCENE))

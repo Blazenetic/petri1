@@ -36,11 +36,6 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var debug_show_states: bool = false
 @export var behavior_state_history_capacity: int = 32
 
-# Pool sizes per entity type (existing)
-var entity_pool_sizes: Dictionary = {
-	EntityTypes.EntityType.BACTERIA: 300,
-	EntityTypes.EntityType.NUTRIENT: 200
-}
 
 # Optional per-type scene mapping (PHASE 2.1)
 # Allows EntityFactory to instance specific scenes for each entity type.
@@ -52,8 +47,6 @@ var entity_scene_paths: Dictionary = {
 # Logger autoload handle (resolved in _ready)
 var _log
 
-func get_entity_pool_size(entity_type: int) -> int:
-	return int(entity_pool_sizes.get(entity_type, 20))
 
 func get_entity_scene_path(entity_type: int) -> String:
 	return String(entity_scene_paths.get(entity_type, ""))
