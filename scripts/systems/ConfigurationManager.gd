@@ -31,6 +31,11 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var bacteria_offspring_offset_radius: float = 10.0
 @export var bacteria_max_children_per_min: int = 20
 
+# State/behavior debug and feeding (PHASE 2.3)
+@export var bacteria_feeding_cooldown_ms: int = 250
+@export var debug_show_states: bool = false
+@export var behavior_state_history_capacity: int = 32
+
 # Pool sizes per entity type (existing)
 var entity_pool_sizes: Dictionary = {
 	EntityTypes.EntityType.BACTERIA: 300,
@@ -61,8 +66,7 @@ func _ready() -> void:
 		# Fallback minimal notice to avoid hard failure if autoload isn't registered yet
 		print("[ConfigurationManager] ready (Log autoload missing)")
 		return
-	# Ensure InputMap contains debug actions (F9 / Shift+F9)
-	_ensure_input_actions()
+
 	# Per-category thresholds per proposal
 	_log.set_global_enabled(dev)
 	if dev:
@@ -95,31 +99,3 @@ func _ready() -> void:
 		"respawn_s=[", nutrient_respawn_delay_min, ",", nutrient_respawn_delay_max, "]",
 		"dist_mode=", nutrient_distribution_mode
 	])
-
-func _ensure_input_actions() -> void:
-	# debug_toggle_global: F9 (no shift)
-	if not InputMap.has_action("debug_toggle_global"):
-		InputMap.add_action("debug_toggle_global")
-	if not _has_key_event_for_action(&"debug_toggle_global", Key.KEY_F9, false):
-		var ev_toggle := InputEventKey.new()
-		ev_toggle.physical_keycode = Key.KEY_F9
-		ev_toggle.shift_pressed = false
-		ev_toggle.pressed = false
-		InputMap.action_add_event("debug_toggle_global", ev_toggle)
-	# debug_cycle_perf: Shift+F9
-	if not InputMap.has_action("debug_cycle_perf"):
-		InputMap.add_action("debug_cycle_perf")
-	if not _has_key_event_for_action(&"debug_cycle_perf", Key.KEY_F9, true):
-		var ev_cycle := InputEventKey.new()
-		ev_cycle.physical_keycode = Key.KEY_F9
-		ev_cycle.shift_pressed = true
-		ev_cycle.pressed = false
-		InputMap.action_add_event("debug_cycle_perf", ev_cycle)
-
-func _has_key_event_for_action(action_name: StringName, keycode: int, shift: bool) -> bool:
-	var events := InputMap.action_get_events(action_name)
-	for e in events:
-		var k := e as InputEventKey
-		if k and k.physical_keycode == keycode and k.shift_pressed == shift:
-			return true
-	return false
