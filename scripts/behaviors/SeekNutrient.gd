@@ -194,3 +194,14 @@ func _extract_identity(node: Node) -> IdentityComponent:
 			if c is IdentityComponent:
 				return c
 	return null
+
+# --- Public accessors for BehaviorController / state logic (PHASE 2.3) ---
+
+func has_target() -> bool:
+	return not _target_id.is_empty()
+
+func get_current_target_id() -> StringName:
+	return _target_id
+
+func get_current_target_pos() -> Vector2:
+	return _target_pos

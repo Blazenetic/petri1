@@ -37,6 +37,11 @@ const LogDefs = preload("res://scripts/systems/Log.gd")
 @export var bacteria_default_radius: float = 4.0
 @export var bacteria_initial_count: int = 20
 
+# State/behavior debug and feeding (PHASE 2.3)
+@export var bacteria_feeding_cooldown_ms: int = 250
+@export var debug_show_states: bool = false
+@export var behavior_state_history_capacity: int = 32
+
 # Pool sizes per entity type (existing)
 var entity_pool_sizes: Dictionary = {
 	EntityTypes.EntityType.BACTERIA: 30,
@@ -67,8 +72,7 @@ func _ready() -> void:
 		# Fallback minimal notice to avoid hard failure if autoload isn't registered yet
 		print("[ConfigurationManager] ready (Log autoload missing)")
 		return
-	# Ensure InputMap contains debug actions (F9 / Shift+F9)
-	_ensure_input_actions()
+
 	# Per-category thresholds per proposal
 	_log.set_global_enabled(dev)
 	if dev:

@@ -6,11 +6,16 @@ const StateMachine = preload("res://scripts/behaviors/state/StateMachine.gd")
 const BacteriaStateSeeking = preload("res://scripts/behaviors/bacteria/BacteriaStateSeeking.gd")
 const BacteriaStateReproducing = preload("res://scripts/behaviors/bacteria/BacteriaStateReproducing.gd")
 const BacteriaStateDying = preload("res://scripts/behaviors/bacteria/BacteriaStateDying.gd")
+const SeekNutrient = preload("res://scripts/behaviors/SeekNutrient.gd")
+const BacteriaStateIdle = preload("res://scripts/behaviors/bacteria/BacteriaStateIdle.gd")
+const BacteriaStateFeeding = preload("res://scripts/behaviors/bacteria/BacteriaStateFeeding.gd")
 
 var sm: StateMachine
 var state_seeking: BacteriaStateSeeking
 var state_reproducing: BacteriaStateReproducing
 var state_dying: BacteriaStateDying
+var state_idle: BacteriaStateIdle
+var state_feeding: BacteriaStateFeeding
 
 # Cached components
 var _be: BaseEntity
@@ -19,9 +24,14 @@ var _bio: BiologicalComponent
 var _id: IdentityComponent
 var _phys: PhysicalComponent
 var _fx: CPUParticles2D
+var _seek: SeekNutrient
 
 # Per-entity reproduction limiter (timestamps in seconds)
 var _recent_children_times: Array[float] = []
+
+# State history ring buffer (PHASE 2.3)
+var _state_history: Array = []
+var _history_capacity: int = 32
 
 func init(entity: Node) -> void:
 	_be = entity as BaseEntity
@@ -36,6 +46,8 @@ func init(entity: Node) -> void:
 				_move = c
 			elif c is BiologicalComponent:
 				_bio = c
+			elif c is SeekNutrient:
+				_seek = c
 	# Optional FX node on the entity
 	_fx = _be.get_node_or_null("FissionBurst") as CPUParticles2D
 
@@ -44,7 +56,18 @@ func init(entity: Node) -> void:
 	state_seeking = BacteriaStateSeeking.new()
 	state_reproducing = BacteriaStateReproducing.new()
 	state_dying = BacteriaStateDying.new()
+	state_idle = BacteriaStateIdle.new()
+	state_feeding = BacteriaStateFeeding.new()
+	# Initial state: Seeking (replace semantics on empty stack)
 	sm.set_state(self, &"Seeking", state_seeking)
+	# Telemetry hook for history
+	if sm and not sm.is_connected("state_changed", Callable(self, "_on_sm_state_changed")):
+		sm.connect("state_changed", Callable(self, "_on_sm_state_changed"))
+	# History capacity from configuration
+	if ConfigurationManager != null and "behavior_state_history_capacity" in ConfigurationManager:
+		_history_capacity = int(ConfigurationManager.behavior_state_history_capacity)
+	# Debug discoverability
+	add_to_group("BehaviorControllers")
 
 	# Intercept biological death to drive polished destruction
 	if _bio and not _bio.is_connected("died", Callable(self, "_on_bio_died")):
@@ -53,20 +76,37 @@ func init(entity: Node) -> void:
 func update(delta: float) -> void:
 	if sm:
 		sm.update(self, delta)
-	# Transition to Reproducing if eligible and not already reproducing or dying
-	if _bio and _move and sm and not sm.is_in(&"Dying") and not sm.is_in(&"Reproducing"):
-		if can_reproduce_now():
-			sm.set_state(self, &"Reproducing", state_reproducing)
+	# Deterministic prioritized transitions (after state update)
+	if sm and not sm.is_in(&"Dying"):
+		# 1) Reproducing (replace)
+		if _bio and _move and not sm.is_in(&"Reproducing") and can_reproduce_now():
+			sm.replace_state(self, &"Reproducing", state_reproducing, "repro_check")
+		else:
+			# 2) Feeding (push) when target lock + overlap, and not reproducing/dying
+			if not sm.is_in(&"Reproducing") and not sm.is_in(&"Feeding"):
+				if _seek and _seek.has_target() and _is_overlapping_nutrient():
+					if state_feeding == null:
+						state_feeding = BacteriaStateFeeding.new()
+					# Gate via state internal cooldown
+					if state_feeding.can_enter():
+						sm.push(self, &"Feeding", state_feeding, "nutrient_overlap")
+	# 3) Seeking fallback if stack emptied
+	if sm and sm.depth() == 0:
+		sm.replace_state(self, &"Seeking", state_seeking, "fallback_seeking")
 
 func cleanup() -> void:
 	if _bio and _bio.is_connected("died", Callable(self, "_on_bio_died")):
 		_bio.disconnect("died", Callable(self, "_on_bio_died"))
+	if sm and sm.is_connected("state_changed", Callable(self, "_on_sm_state_changed")):
+		sm.disconnect("state_changed", Callable(self, "_on_sm_state_changed"))
+	remove_from_group("BehaviorControllers")
 	_be = null
 	_move = null
 	_bio = null
 	_id = null
 	_phys = null
 	_fx = null
+	_seek = null
 	sm = null
 
 # --- Transition helpers ---
@@ -196,7 +236,49 @@ func spawn_offspring(child_energy: float) -> Dictionary:
 
 	return {"id": child_id, "node": child_node}
 
+# --- Transition queries & helpers (PHASE 2.3) ---
+
+func _is_overlapping_nutrient() -> bool:
+	if _be == null:
+		return false
+	var areas: Array = []
+	if _be.has_method("get_overlapping_areas"):
+		areas = _be.get_overlapping_areas()
+	if areas.is_empty():
+		return false
+	for a in areas:
+		var be := _resolve_base_entity(a)
+		if be != null and be.entity_type == EntityTypes.EntityType.NUTRIENT:
+			return true
+	return false
+
+func _resolve_base_entity(node: Node) -> BaseEntity:
+	var n := node
+	while n != null:
+		var b := n as BaseEntity
+		if b != null:
+			return b
+		n = n.get_parent()
+	return null
+
+func get_current_state_name() -> StringName:
+	return sm.current_name if sm != null else StringName()
+
+func get_state_history() -> Array:
+	return _state_history.duplicate()
+
 # --- Signals ---
 
 func _on_bio_died(reason: StringName) -> void:
 	sm.set_state(self, &"Dying", state_dying.set_cause(reason))
+
+func _on_sm_state_changed(prev_name: StringName, new_name: StringName, reason: String) -> void:
+	var entry := {
+		"timestamp_sec": _time_now(),
+		"from_state": prev_name,
+		"to_state": new_name,
+		"reason": reason
+	}
+	_state_history.append(entry)
+	if _state_history.size() > max(1, _history_capacity):
+		_state_history.remove_at(0)
