@@ -5,7 +5,6 @@ class_name BaseEntity
 @export var size: float = 8.0
 @export var base_color: Color = Color(0.3, 0.8, 0.3, 1.0)
 
-signal ready_for_pool()
 
 var _components: Array[EntityComponent] = []
 var identity: IdentityComponent
@@ -86,7 +85,6 @@ func init(params := {}) -> void:
 func deinit() -> void:
 	for c in _components:
 		c.cleanup()
-	emit_signal("ready_for_pool")
 
 func _process(delta: float) -> void:
 	for c in _components:

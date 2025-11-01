@@ -58,8 +58,6 @@ var entity_scene_paths: Dictionary = {
 # Logger autoload handle (resolved in _ready)
 var _log
 
-func get_entity_pool_size(entity_type: int) -> int:
-	return int(entity_pool_sizes.get(entity_type, 20))
 
 func get_entity_scene_path(entity_type: int) -> String:
 	return String(entity_scene_paths.get(entity_type, ""))
