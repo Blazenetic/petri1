@@ -6,10 +6,10 @@ Document intent
 - Integrate cleanly with existing components and behaviors from prior phases without breaking current gameplay.
 
 Repository observations to align with
-- A minimal State base exists at [scripts/behaviors/state/State.gd](scripts/behaviors/state/State.gd) with lifecycle hooks [enter()](scripts/behaviors/state/State.gd:6), [update()](scripts/behaviors/state/State.gd:9), [exit()](scripts/behaviors/state/State.gd:12).
-- A simple StateMachine exists at [scripts/behaviors/state/StateMachine.gd](scripts/behaviors/state/StateMachine.gd) with [set_state()](scripts/behaviors/state/StateMachine.gd:7), [update()](scripts/behaviors/state/StateMachine.gd:15), [is_in()](scripts/behaviors/state/StateMachine.gd:19) but no stack support.
-- Behavior orchestration is currently owned by [scripts/behaviors/BehaviorController.gd](scripts/behaviors/BehaviorController.gd) which creates a state machine instance, enters Seeking on init, transitions to Reproducing when allowed, and moves to Dying on BiologicalComponent died signal. See terminal callback [_on_bio_died()](scripts/behaviors/BehaviorController.gd:201).
-- Existing bacteria states are present under [scripts/behaviors/bacteria/](scripts/behaviors/bacteria/). Seeking is minimal and compatible with steering behaviors: [scripts/behaviors/bacteria/BacteriaStateSeeking.gd](scripts/behaviors/bacteria/BacteriaStateSeeking.gd).
+- A minimal State base exists at (scripts/behaviors/state/State.gd) with lifecycle hooks [enter()](scripts/behaviors/state/State.gd:6), [update()](scripts/behaviors/state/State.gd:9), [exit()](scripts/behaviors/state/State.gd:12).
+- A simple StateMachine exists at (scripts/behaviors/state/StateMachine.gd) with [set_state()](scripts/behaviors/state/StateMachine.gd:7), [update()](scripts/behaviors/state/StateMachine.gd:15), [is_in()](scripts/behaviors/state/StateMachine.gd:19) but no stack support.
+- Behavior orchestration is currently owned by (scripts/behaviors/BehaviorController.gd) which creates a state machine instance, enters Seeking on init, transitions to Reproducing when allowed, and moves to Dying on BiologicalComponent died signal. See terminal callback [_on_bio_died()](scripts/behaviors/BehaviorController.gd:201).
+- Existing bacteria states are present under (scripts/behaviors/bacteria/). Seeking is minimal and compatible with steering behaviors: (scripts/behaviors/bacteria/BacteriaStateSeeking.gd).
 
 Scope for this phase
 - Enhance and generalize the StateMachine to support a stack of states with safe transition semantics.
@@ -28,12 +28,12 @@ High-level design principles
 
 Architecture and files to modify or add
 - Core state system
-  - Update [scripts/behaviors/state/State.gd](scripts/behaviors/state/State.gd) only if needed to add optional metadata helpers such as state_name and state_color accessors. Preserve the existing lifecycle hooks [enter()](scripts/behaviors/state/State.gd:6), [update()](scripts/behaviors/state/State.gd:9), [exit()](scripts/behaviors/state/State.gd:12).
-  - Extend [scripts/behaviors/state/StateMachine.gd](scripts/behaviors/state/StateMachine.gd) to support a state stack and safe transitions. Keep public API backwards-compatible with [set_state()](scripts/behaviors/state/StateMachine.gd:7) and [is_in()](scripts/behaviors/state/StateMachine.gd:19).
+  - Update (scripts/behaviors/state/State.gd) only if needed to add optional metadata helpers such as state_name and state_color accessors. Preserve the existing lifecycle hooks [enter()](scripts/behaviors/state/State.gd:6), [update()](scripts/behaviors/state/State.gd:9), [exit()](scripts/behaviors/state/State.gd:12).
+  - Extend (scripts/behaviors/state/StateMachine.gd) to support a state stack and safe transitions. Keep public API backwards-compatible with [set_state()](scripts/behaviors/state/StateMachine.gd:7) and [is_in()](scripts/behaviors/state/StateMachine.gd:19).
 - Behavior controller
-  - Keep orchestration centralized in [scripts/behaviors/BehaviorController.gd](scripts/behaviors/BehaviorController.gd). Add transition requests through the new stack-capable API. Preserve existing hooks for reproduction and death.
+  - Keep orchestration centralized in (scripts/behaviors/BehaviorController.gd). Add transition requests through the new stack-capable API. Preserve existing hooks for reproduction and death.
 - Species states
-  - Ensure bacteria states exist for Idle, Seeking, Feeding, Reproducing, Dying in [scripts/behaviors/bacteria/](scripts/behaviors/bacteria/). Reuse and align existing files where present.
+  - Ensure bacteria states exist for Idle, Seeking, Feeding, Reproducing, Dying in (scripts/behaviors/bacteria/). Reuse and align existing files where present.
 - Debug and UI
   - Add optional debug-only overlays under the HUD or a dedicated debug layer to visualize current state for the selected entity. No production rendering code inside states.
 
@@ -73,7 +73,7 @@ Core semantics
 State base class contract
 
 Do not change existing hooks; extend with optional self-description:
-- Lifecycle hooks remain as defined in [scripts/behaviors/state/State.gd](scripts/behaviors/state/State.gd):
+- Lifecycle hooks remain as defined in (scripts/behaviors/state/State.gd):
   - [enter()](scripts/behaviors/state/State.gd:6)
   - [update()](scripts/behaviors/state/State.gd:9)
   - [exit()](scripts/behaviors/state/State.gd:12)
@@ -104,7 +104,7 @@ Add the following capabilities as operations and internal behavior (describe, av
 
 Organism states and responsibilities
 
-Define these bacteria states under [scripts/behaviors/bacteria/](scripts/behaviors/bacteria/):
+Define these bacteria states under (scripts/behaviors/bacteria/):
 - Idle
   - Purpose: baseline low-activity behavior when no stimuli are detected or when throttling updates for performance.
   - Behavior: zero or low acceleration, allow metabolism and passive drift if present.
@@ -188,8 +188,8 @@ Implementation checklist for the Code AI
 - Acceptance: BehaviorController can read state_name for UI without reflection or string hacks.
 
 3) Implement or align bacteria states
-- Ensure Idle, Seeking, Feeding, Reproducing, Dying exist under [scripts/behaviors/bacteria/](scripts/behaviors/bacteria/), following the responsibilities above.
-- Ensure Seeking remains a minimal pass-through that resets visuals and lets steering behaviors run. See [scripts/behaviors/bacteria/BacteriaStateSeeking.gd](scripts/behaviors/bacteria/BacteriaStateSeeking.gd).
+- Ensure Idle, Seeking, Feeding, Reproducing, Dying exist under (scripts/behaviors/bacteria/), following the responsibilities above.
+- Ensure Seeking remains a minimal pass-through that resets visuals and lets steering behaviors run. See (scripts/behaviors/bacteria/BacteriaStateSeeking.gd).
 - Ensure Reproducing and Dying are terminal or transient as appropriate, returning control to Seeking on completion or to destruction flow.
 - Acceptance: each state cleanly sets up and tears down any visual hints; no lingering effects after exit.
 
@@ -227,9 +227,9 @@ Implementation checklist for the Code AI
 Acceptance criteria mapping to phased_plan.md
 
 - Implement StateMachine base class with state stack
-  - The extended [scripts/behaviors/state/StateMachine.gd](scripts/behaviors/state/StateMachine.gd) supports push, pop, replace, clear, peek, with deferred transitions and history hooks.
+  - The extended (scripts/behaviors/state/StateMachine.gd) supports push, pop, replace, clear, peek, with deferred transitions and history hooks.
 - Create State base class with enter, update, exit
-  - Already present at [scripts/behaviors/state/State.gd](scripts/behaviors/state/State.gd); ensure optional metadata helpers without breaking existing signatures.
+  - Already present at (scripts/behaviors/state/State.gd); ensure optional metadata helpers without breaking existing signatures.
 - Implement organism states: Idle, Seeking, Feeding, Reproducing, Dying
   - Bacteria variants implemented and wired; Seeking reuses steering behaviors; Reproducing and Dying align with existing controller helpers.
 - Add state transition conditions and validation
@@ -255,13 +255,13 @@ Risks and mitigations
 Deliverables for this phase
 
 - Updated files
-  - [scripts/behaviors/state/StateMachine.gd](scripts/behaviors/state/StateMachine.gd) with stack support and deferred transitions.
-  - [scripts/behaviors/state/State.gd](scripts/behaviors/state/State.gd) with optional metadata helpers (if added).
-  - [scripts/behaviors/BehaviorController.gd](scripts/behaviors/BehaviorController.gd) wired for prioritized transitions, history recording, and debug exposure.
+  - (scripts/behaviors/state/StateMachine.gd) with stack support and deferred transitions.
+  - (scripts/behaviors/state/State.gd) with optional metadata helpers (if added).
+  - (scripts/behaviors/BehaviorController.gd) wired for prioritized transitions, history recording, and debug exposure.
 - New or aligned files
-  - [scripts/behaviors/bacteria/BacteriaStateIdle.gd]
-  - [scripts/behaviors/bacteria/BacteriaStateFeeding.gd]
-  - Ensure existing [scripts/behaviors/bacteria/BacteriaStateSeeking.gd](scripts/behaviors/bacteria/BacteriaStateSeeking.gd) remains minimal and resets visuals on enter.
+  - 
+  - 
+  - Ensure existing (scripts/behaviors/bacteria/BacteriaStateSeeking.gd) remains minimal and resets visuals on enter.
   - Ensure BacteriaStateReproducing.gd and BacteriaStateDying.gd match the responsibilities above.
 - Debug visualization
   - Minimal state display in debug mode for selected entity via HUD or a dedicated debug draw script.
@@ -287,23 +287,23 @@ Confirmed execution decisions (from phase lead)
 
 These choices are final for Phase 2.3 and should be implemented as specified below.
 
-1) State stack semantics in [scripts/behaviors/state/StateMachine.gd](scripts/behaviors/state/StateMachine.gd)
+1) State stack semantics in (scripts/behaviors/state/StateMachine.gd)
 - Use exit/enter transitions on push and pop with deferred application (no pause/resume callbacks in this phase).
 - Maintain backward-compatible replace semantics for set_state while internally using the new stack-aware implementation.
 - Reentrancy guard: collect at most one transition request during a state update and apply after update returns, preferring pop &gt; replace &gt; push if multiple are requested.
 - Acceptance: enter/exit order is deterministic during push/pop in a unit exercise or logged trace.
 
 2) Feeding trigger path
-- Trigger Feeding by pushing it atop the stack when the organism has an active nutrient target lock exposed by [scripts/behaviors/SeekNutrient.gd](scripts/behaviors/SeekNutrient.gd) and overlap/contact is detected by the organism’s sensing/collision path.
+- Trigger Feeding by pushing it atop the stack when the organism has an active nutrient target lock exposed by (scripts/behaviors/SeekNutrient.gd) and overlap/contact is detected by the organism’s sensing/collision path.
 - Do not rely on GlobalEvents for the transition trigger; GlobalEvents.nutrient_consumed remains a bookkeeping/energy path, not the entry condition.
-- Apply a short internal cool-off window (200–400 ms) inside Feeding to prevent rapid oscillation. Make the duration configurable via [scripts/systems/ConfigurationManager.gd](scripts/systems/ConfigurationManager.gd).
+- Apply a short internal cool-off window (200–400 ms) inside Feeding to prevent rapid oscillation. Make the duration configurable via (scripts/systems/ConfigurationManager.gd).
 - On Feeding completion or timeout, pop Feeding to resume the underlying Seeking state.
 
 3) Debug visualization location
 - Embed a simple state label in the existing HUD inspector pipeline at [scenes/ui/HUD.tscn](scenes/ui/HUD.tscn). Gate its visibility behind a configuration/debug flag.
 - The HUD should read the current state name from BehaviorController (do not query state internals directly). If selection is not yet implemented, implement a temporary hook that shows the state for a debug-selected entity.
 
-4) Configuration keys (add to [scripts/systems/ConfigurationManager.gd](scripts/systems/ConfigurationManager.gd))
+4) Configuration keys (add to (scripts/systems/ConfigurationManager.gd))
 - bacteria_feeding_cooldown_ms: int (default 250). Cool-off window preventing immediate re-entry into Feeding after a Feeding instance completes.
 - debug_show_states: bool (default false). Toggles the HUD state label visualization for selected/current debug entity.
 - Notes:
@@ -312,7 +312,7 @@ These choices are final for Phase 2.3 and should be implemented as specified bel
 
 Checklist alignment updates (apply to the implementation steps above)
 - StateMachine: implement push/pop/replace/clear/peek using exit/enter semantics; ensure set_state remains a replace operation. Add deferred transition handling and validation.
-- Feeding state: implement as a transient push with an internal timer driven by bacteria_feeding_cooldown_ms; entry requires active target lock from [scripts/behaviors/SeekNutrient.gd](scripts/behaviors/SeekNutrient.gd) plus overlap.
+- Feeding state: implement as a transient push with an internal timer driven by bacteria_feeding_cooldown_ms; entry requires active target lock from (scripts/behaviors/SeekNutrient.gd) plus overlap.
 - BehaviorController: prioritize transitions Dying &gt; Reproducing (replace) &gt; Feeding (push) &gt; Seeking fallback; never enter Feeding from the GlobalEvents consumption callback.
 - HUD debug: surface current state name when debug_show_states is true via [scenes/ui/HUD.tscn](scenes/ui/HUD.tscn); ensure negligible cost when disabled.
 
